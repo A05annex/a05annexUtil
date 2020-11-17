@@ -34,7 +34,8 @@ public final class Utl {
     /**
      * This class is all static constants and methods, it cannot be instantiated.
      */
-    private Utl() {}
+    private Utl() {
+    }
 
     /**
      * Get the length of an n-dimensional set of lengths.
@@ -42,7 +43,7 @@ public final class Utl {
      * @param values The dimensional lengths. The number of dimensional lengths is variable and may be zero.
      * @return The n-dimensional length, 0.0 of no dimensional lengths are specified.
      */
-    public static double length(double ... values) {
+    public static double length(double... values) {
         double lengthSquared = 0.0;
         for (double v : values) {
             lengthSquared += v * v;
@@ -56,7 +57,7 @@ public final class Utl {
      * @param values The values. The number of values is variable and may be zero.
      * @return The maximum value, {@link Double#NEGATIVE_INFINITY} if no values are specified.
      */
-    public static double max(double ... values) {
+    public static double max(double... values) {
         double max = Double.NEGATIVE_INFINITY;
         for (double v : values) {
             if (v > max) {
@@ -72,7 +73,7 @@ public final class Utl {
      * @param values The values. The number of values is variable and may be zero.
      * @return The minimum value, {@link Double#POSITIVE_INFINITY} if no values are specified.
      */
-    public static double min(double ... values) {
+    public static double min(double... values) {
         double min = Double.POSITIVE_INFINITY;
         for (double v : values) {
             if (v < min) {

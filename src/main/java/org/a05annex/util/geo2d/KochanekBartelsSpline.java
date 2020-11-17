@@ -73,7 +73,7 @@ public class KochanekBartelsSpline {
 
     /**
      * The default path delta in seconds, useful for drawing path curves on the field. The FRC control loop runs
-     * at 20ms per cycle, or 50 samples per second). We found 20 samples pwe second (a sample every {@code 0.05}sec
+     * at 20ms per cycle, or 50 samples per second). We found 20 samples per second (a sample every {@code 0.05}sec)
      * worked best for out interactive path planning tools.
      */
     public static final double DEFAULT_PATH_DELTA = 0.05;
@@ -411,9 +411,9 @@ public class KochanekBartelsSpline {
         }
 
         /**
-         * Get the field X location for the display of af a tangent editing handle for this control point.
+         * Get the field Y location for the display of af a tangent editing handle for this control point.
          *
-         * @return (double) The field X location of the handle for editing the tangent of the control point.
+         * @return (double) The field Y location of the handle for editing the tangent of the control point.
          */
         public double getTangentY() {
             return m_fieldY + (DERIVATIVE_UI_SCALE * m_dY);
@@ -789,6 +789,7 @@ public class KochanekBartelsSpline {
 
         /**
          * Get a {@link PathPoint} iterator.
+         *
          * @return A {@link PathPoint} iterator for this curve.
          */
         @NotNull
@@ -1079,7 +1080,7 @@ public class KochanekBartelsSpline {
         clearPath();
         try {
             // Load the path from the file.
-            JSONObject path = readJsonFile(filename);
+            JSONObject path = readJsonFileAsJSONObject(filename);
             m_title = parseString(path, TITLE, DEFAULT_TITLE);
             m_description = parseString(path, DESCRIPTION, DEFAULT_DESCRIPTION);
             JSONArray controlPoints = getJSONArray(path, CONTROL_POINTS);
