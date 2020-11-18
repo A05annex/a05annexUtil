@@ -1,14 +1,14 @@
 package org.a05annex.util;
 
-import org.junit.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- *
+ * This is a set of tests for the methods in {@link Utl}.
  */
 @RunWith(JUnitPlatform.class)
 public class TestUtil {
