@@ -31,7 +31,7 @@ test {
 publishing {
     publications {
         maven(MavenPublication) {
-            groupId = 'org,ao5annex'
+            groupId = 'org.ao5annex'
             artifactId = 'util'
             version = '0.8.0'
 
@@ -56,9 +56,9 @@ publishing {
                     }
                 }
                 scm {
-                    connection = 'scm:git:git://example.com/my-library.git'
-                    developerConnection = 'scm:git:ssh://example.com/my-library.git'
-                    url = 'http://example.com/my-library/'
+                    connection = 'scm:git:git://github.com/A05annex/a05annexUtil.git'
+                    developerConnection = 'scm:git:ssh://github.com/A05annex/a05annexUtil.git'
+                    url = 'https://github.com/A05annex/a05annexUtil'
                 }
             }
         }
