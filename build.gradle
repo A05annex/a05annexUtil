@@ -1,5 +1,6 @@
 plugins {
     id 'java-library'
+    id 'maven-publish'
 }
 
 repositories {
@@ -28,6 +29,41 @@ test {
 }
 
 publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = 'org,ao5annex'
+            artifactId = 'util'
+            version = '0.8.0'
+
+            from components.java
+        }
+        mavenJava(MavenPublication) {
+            pom {
+                name = 'A05annex Utilities'
+                description = 'A05annex robotics utilities not dependent on the First FRC code base.'
+                url = 'https://github.com/A05annex/a05annexUtil'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'A05annex'
+                        name = 'A05annex'
+                        email = 'a05annexrobotics@gmail.com'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:git://example.com/my-library.git'
+                    developerConnection = 'scm:git:ssh://example.com/my-library.git'
+                    url = 'http://example.com/my-library/'
+                }
+            }
+        }
+
+    }
     repositories {
         maven {
             name = "GitHubPackages"
@@ -39,6 +75,7 @@ publishing {
         }
     }
 }
+
 sourceCompatibility = '1.9'
 targetCompatibility = '1.9'
 version = '0.8.0'
