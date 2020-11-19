@@ -1,8 +1,10 @@
 name: Publish package to GitHub Packages
 
-on:
-  release:
-    types: [released]
+on: [workflow_dispatch]
+
+#on:
+#  release:
+#    types: [released]
 
 jobs:
   publish:

@@ -17,6 +17,12 @@ dependencies {
     testRuntime('org.junit.jupiter:junit-jupiter-engine:5.4.2')
 }
 
+sourceCompatibility = '1.9'
+targetCompatibility = '1.9'
+version = '0.8.0'
+group = 'org.ao5annex'
+
+
 java {
     withJavadocJar()
     withSourcesJar()
@@ -30,14 +36,9 @@ test {
 
 publishing {
     publications {
-        maven(MavenPublication) {
-            groupId = 'org.ao5annex'
-            artifactId = 'util'
-            version = '0.8.0'
-
-            from components.java
-        }
         mavenJava(MavenPublication) {
+            artifactId = 'util'
+            from components.java
             pom {
                 name = 'A05annex Utilities'
                 description = 'A05annex robotics utilities not dependent on the First FRC code base.'
@@ -76,9 +77,7 @@ publishing {
     }
 }
 
-sourceCompatibility = '1.9'
-targetCompatibility = '1.9'
-version = '0.8.0'
+
 
 
 
