@@ -22,7 +22,7 @@ jobs:
         run: chmod +x ./gradlew
       - name: Build with Gradle
         run: ./gradlew build
-# No point in doing this - unlesswe are going to release from the artifact.
+# No point in doing this - unless we are going to release from the artifact.
 #      - name: Package
 #        uses: actions/upload-artifact@v2
 #        with:
