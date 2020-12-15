@@ -1,4 +1,4 @@
-* **version:** 0.8.0
+* **version:** 0.8.4
 * **status:** in development - do not use this yet
 * **comments:** We are in the process of pulling this library out of a larger code base for release. Documentation and
   testing are incomplete and/or inaccurate. We have not yet incorporated this library in our other software projects.

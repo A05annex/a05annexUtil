@@ -62,7 +62,7 @@ public class JsonSupport {
      * @param key  The key for the value to be obtained.
      * @return The value of the parse point if the @code key} is specified in the JSON, {@code null} otherwise.
      */
-    @NotNull
+    @Nullable
     static public Point2D parsePoint(@NotNull JSONObject dict, @NotNull String key) {
         Object valueObj = dict.get(key);
         if ((null != valueObj) && (valueObj.getClass() == JSONArray.class)) {
@@ -202,7 +202,7 @@ public class JsonSupport {
      * @throws ParseException        JSON format error in the file contents.
      */
     @NotNull
-    static public JSONArray readJsonFileAsJSONArrayt(@NotNull String filename) throws
+    static public JSONArray readJsonFileAsJSONArray(@NotNull String filename) throws
             IOException, ParseException {
         JSONParser jsonParser = new JSONParser();
         FileReader reader = new FileReader(filename);

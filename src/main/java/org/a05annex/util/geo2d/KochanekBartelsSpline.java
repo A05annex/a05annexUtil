@@ -1102,9 +1102,11 @@ public class KochanekBartelsSpline {
                 point.updateLocationDerivatives();
                 point.updateHeadingDerivative();
             }
-            // and, the derivatives for the first point ius dependent on the derivatives for
+            // and, the derivatives for the first point is dependent on the derivatives for
             // the later points in the spline, so recompute that now that we have the later points.
-            m_first.updateLocationDerivatives();
+            if (null != m_first) {
+                m_first.updateLocationDerivatives();
+            }
 
 
         } catch (IOException | ParseException | ClassCastException | NullPointerException e) {
