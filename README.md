@@ -25,15 +25,19 @@ it in our robot code. It follows the advice from this
 [chiefdelphi post](https://www.chiefdelphi.com/t/adding-my-teams-library-as-a-vendor-library/339626)
 and advises you:
 * create a `libs` folder in your robot project
-* copy the `util-0.8.5.jar` file from the 0.8.5 release into that directory
+* copy the `util-0.8.5.jar` file from the 0.8.5 release into that `libs` folder
 * in the dependencies section of the build.gradle file add the line:  
   `compile fileTree(dir: 'libs', include: ['*.jar'])`
+* add the `util-0.8.5.jar` to git so it is saved as part of your project.
+  
+The disadvantage of this method is that you must manually download the library and
+put it in your project, you also need to check for version updates.
   
 ### Modify build.gradle to Get the Dependency from the GitHub Packages Repository
 
 If you are using **a05annexUtil** in another project, like our
 [Swerve Path Planning](https://github.com/A05annex/SwervePathPlanning) project, you can make
-these additions to your `build.gradle` plugins, repositories, and dependencies as
+these additions to your `build.gradle` plugins, repositories, and dependencies as:
 ```
 plugins {
     ...
@@ -58,6 +62,12 @@ dependencies {
 }
 
 ```
+Specfically:
+* make sure `'maven'` is in your list of plugins
+* add a section in `repositories` specifying where the project is on github. Note
+  that this has credentials to allow download.
+* add the dependency for `compile`, and `testCompile` if you need it a05annexUtil
+in your testing.
 
 ### Get the a05annexutil from the Maven Repository
 
@@ -73,8 +83,8 @@ of a github workflow.
   * Plane2d - a 2d representation of a plane that we can use for collision testing between the robot
     and the field boundary or field elements during path planning.
 * JsonSupport - a class with helper functions to aid in reading/writing JSON files.
-* Utl - a class which extends the java `Math` class with variable argument min, max, and
-  length functions.
+* Utl - a class which extends the java `Math` class with variable argument min(), max(), and
+  length() functions.
 
     
 
