@@ -1,4 +1,4 @@
-* **version:** 0.8.5
+* **version:** 0.8.6
 * **status:** in development - do not use this yet
 * **comments:** We are in the process of pulling this library out of a larger code base
   for release. Documentation and testing are incomplete, and while we are now using this
@@ -16,28 +16,44 @@ used regardless of the FTC/FRC base platform libraries and/or hardware.
 
 We wanted to package a05annexUtil so it was easy for us to use in future years, and
 easy for you to use in your FRC projects. We found this was not as easy as we had
-hoped. There are several paths for inclusion.
+hoped as publishing artifacts to Maven repositories is non-trivial, but we now have
+it working.
+
+There are several paths for inclusion.
+
+### The Best Method
+
+Simply add it to the dependencies section of your `gradle.build` file as:
+```
+dependencies {
+    compile 'org.a05annex:a05annexUtil:0.8.6'
+     .
+     .
+     .
+}
+```
 
 ### Download the .jar and Make it Part of Your Project
 
-This is simplest way to use **a05annexUtil**, and the only way we've found to include
-it in our robot code. It follows the advice from this
+The next most simple way to use **a05annexUtil**, following the advice from this
 [chiefdelphi post](https://www.chiefdelphi.com/t/adding-my-teams-library-as-a-vendor-library/339626)
 and advises you:
 * create a `libs` folder in your robot project
-* copy the `util-0.8.5.jar` file from the 0.8.5 release into that `libs` folder
-* in the dependencies section of the build.gradle file add the line:  
+* copy the `a05annxUtil-0.8.6.jar` file from the 0.8.6 release into that `libs` folder
+* in the dependencies section of the `build.gradle` file add the line:  
   `compile fileTree(dir: 'libs', include: ['*.jar'])`
-* add the `util-0.8.5.jar` to git so it is saved as part of your project.
+* add the `libs/a05annxUtil-0.8.6.jar` to git so it is saved as part of your project.
   
 The disadvantage of this method is that you must manually download the library and
 put it in your project, you also need to check for version updates.
   
 ### Modify build.gradle to Get the Dependency from the GitHub Packages Repository
 
-If you are using **a05annexUtil** in another project, like our
-[Swerve Path Planning](https://github.com/A05annex/SwervePathPlanning) project, you can make
-these additions to your `build.gradle` plugins, repositories, and dependencies as:
+We only have this section because this was a way to publish within github before we
+figured out how to publish to the Central Maven Repository. You can make additions
+to `build.gradle` to get the artifact from the gradle repository; but, this won't
+work in your robot code, and you need to jump through a bunch of hoops to get it to work:
+
 ```
 plugins {
     ...
@@ -57,34 +73,29 @@ repositories {
 }
 
 dependencies {
-    compile 'org.a05annex:util:0.8.5'
+    compile 'org.a05annex:a05annexUtil:0.8.6'
     ...
 }
 
 ```
-Specfically:
+Specifically:
 * make sure `'maven'` is in your list of plugins
 * add a section in `repositories` specifying where the project is on github. Note
   that this has credentials to allow download.
 * add the dependency for `compile`, and `testCompile` if you need it a05annexUtil
-in your testing.
-
-### Get the a05annexutil from the Maven Repository
-
-Stay tuned - we've not yet figured out the signing so we can make the release as part
-of a github workflow.
+  in your testing.
 
 ## a05annexUtil Library Contents
 
-* geo2d - some 2d geometric classes
-  * KochanekBartelsSpline - a spline formulation continuous in position, velocity, and
+* **`geo2d`** - some 2d geometric classes
+  * **`KochanekBartelsSpline`** - a spline formulation continuous in position, velocity, and
     acceleration.
-  * Vector2d - a 2d vector used in the spline code.
-  * Plane2d - a 2d representation of a plane that we can use for collision testing between the robot
+  * **`Vector2d`** - a 2d vector used in the spline code.
+  * **`Plane2d`** - a 2d representation of a plane that we can use for collision testing between the robot
     and the field boundary or field elements during path planning.
-* JsonSupport - a class with helper functions to aid in reading/writing JSON files.
-* Utl - a class which extends the java `Math` class with variable argument min(), max(), and
-  length() functions.
+* **`JsonSupport`** - a class with helper functions to aid in reading/writing JSON files.
+* **`Utl`** - a class which extends the java `Math` class with variable argument `min()`, `max()`, and
+  `length()` functions.
 
     
 

@@ -1,6 +1,8 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
+    id 'maven'
+    id 'signing'
 }
 
 repositories {
@@ -19,7 +21,7 @@ dependencies {
 
 sourceCompatibility = '1.9'
 targetCompatibility = '1.9'
-version = '0.8.5'
+version = '0.8.6'
 group = 'org.a05annex'
 
 
@@ -34,14 +36,18 @@ test {
     }
 }
 
-repositories {
-    mavenCentral()
+artifacts {
+    archives jar, javadocJar, sourcesJar
+}
+
+signing {
+    sign configurations.archives
 }
 
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            artifactId = 'util'
+            artifactId = 'a05annexUtil'
             from components.java
             pom {
                 name = 'A05annex Utilities'
@@ -81,7 +87,44 @@ publishing {
     }
 }
 
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+            pom.project {
+                name = 'A05annex Utilities'
+                description = 'A05annex robotics utilities not dependent on the First FRC code base.'
+                url = 'https://github.com/A05annex/a05annexUtil'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'A05annex'
+                        name = 'A05annex'
+                        email = 'a05annexrobotics@gmail.com'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:git://github.com/A05annex/a05annexUtil.git'
+                    developerConnection = 'scm:git:ssh://github.com/A05annex/a05annexUtil.git'
+                    url = 'https://github.com/A05annex/a05annexUtil'
+                }
+            }
+        }
+    }
+}
 
 
 
