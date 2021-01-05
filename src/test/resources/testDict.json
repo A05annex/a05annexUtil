@@ -1,0 +1,13 @@
+{
+  "valueString": "A string value",
+  "valueDouble": 4.5555,
+  "valueTrue": true,
+  "valueFalse": false,
+  "valuePoint": [1.111, 2.222],
+  "valuePointList": [
+    [3.333, 4.444],
+    [5.555, 6.666]
+  ],
+  "valueDict": {},
+  "valueList":[]
+}

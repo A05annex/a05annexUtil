@@ -89,7 +89,7 @@ public class JsonSupport {
      * @param dict         The JSON representation of a dictionary.
      * @param key          The key for the value to be obtained.
      * @param defaultValue The default value for the string.
-     * @return The parsed String if the @code key} is specified in the JSON, {@code defaultValue} otherwise.
+     * @return The parsed String if the {@code key} is specified in the JSON, {@code defaultValue} otherwise.
      */
     @Nullable
     static public String parseString(@NotNull JSONObject dict, @NotNull String key, @Nullable String defaultValue) {
