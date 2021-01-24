@@ -17,7 +17,7 @@ used regardless of the FTC/FRC base platform libraries and/or hardware.
 We wanted to package a05annexUtil so it was easy for us to use in future years, and
 easy for you to use in your FRC projects. We found this was not as easy as we had
 hoped as publishing artifacts to Maven repositories is non-trivial, but we now have
-it working.
+it all working.
 
 There are several paths for inclusion.
 
@@ -32,6 +32,8 @@ dependencies {
      .
 }
 ```
+
+Also add a dependency for `testCompile` if you need it for testing.
 
 ### Download the .jar and Make it Part of Your Project
 

@@ -56,6 +56,16 @@ public class TestJson {
     }
 
     /**
+     * Make sure a dictionary JSON file reads as a dictionary.
+     */
+    @Test
+    @DisplayName("read JSON list as dictionary")
+    void test_read_JSON_list_as_object() {
+        assertThrows(ClassCastException.class,
+                () -> readJsonFileAsJSONObject("./src/test/resources/testList.json"));
+    }
+
+    /**
      * Make sure a list JSON file reads as a list.
      */
     @Test
@@ -68,6 +78,16 @@ public class TestJson {
         } catch (ParseException e) {
             fail(e);
         }
+    }
+
+    /**
+     * Make sure an array JSON file does not read as a list.
+     */
+    @Test
+    @DisplayName("read JSON Dict as list")
+    void test_read_JSON_dict_as_array() {
+        assertThrows(ClassCastException.class,
+                () -> readJsonFileAsJSONArray("./src/test/resources/testDict.json"));
     }
 
     /**

@@ -26,6 +26,7 @@ public class JsonSupport {
      * @param key          The key for the value to be obtained.
      * @param defaultValue The default if the key has not been specified.
      * @return Returns the value for the key.
+     * @throws ClassCastException The value of the key is not a {@code double}.
      */
     static public double parseDouble(@NotNull JSONObject dict, @NotNull String key, double defaultValue) {
         double value = defaultValue;
@@ -44,6 +45,7 @@ public class JsonSupport {
      * @param key          The key for the value to be obtained.
      * @param defaultValue The default if the key has not been specified.
      * @return Returns the value for the key.
+     * @throws ClassCastException The value of the key is not a {@code boolean}.
      */
     static public boolean parseBoolean(@NotNull JSONObject dict, @NotNull String key, boolean defaultValue) {
         boolean value = defaultValue;
@@ -61,6 +63,7 @@ public class JsonSupport {
      * @param dict The JSON representation of a dictionary.
      * @param key  The key for the value to be obtained.
      * @return The value of the parse point if the @code key} is specified in the JSON, {@code null} otherwise.
+     * @throws ClassCastException The value of the key is not a {@code Point2d}.
      */
     @Nullable
     static public Point2D parsePoint(@NotNull JSONObject dict, @NotNull String key) {
@@ -76,6 +79,7 @@ public class JsonSupport {
      *
      * @param coordList The JSON list containing the [X,Y] coordinates of the point.
      * @return The parsed {@link Point2D}.
+     * @throws ClassCastException The value in the list is not a {@code Point2d}.
      */
     @NotNull
     static public Point2D parsePoint(@NotNull JSONArray coordList) {
@@ -90,6 +94,7 @@ public class JsonSupport {
      * @param key          The key for the value to be obtained.
      * @param defaultValue The default value for the string.
      * @return The parsed String if the {@code key} is specified in the JSON, {@code defaultValue} otherwise.
+     * @throws ClassCastException The value of the key is not a {@code String}.
      */
     @Nullable
     static public String parseString(@NotNull JSONObject dict, @NotNull String key, @Nullable String defaultValue) {
@@ -109,6 +114,7 @@ public class JsonSupport {
      * @param key  The key for the value to be obtained.
      * @return The parsed {@link JSONArray} value at the {@code key}.
      * @throws NullPointerException Thrown if the {@code key} does not exist.
+     * @throws ClassCastException   The value of the key is not a list.
      */
     @NotNull
     static public JSONArray getJSONArray(@NotNull JSONObject dict, @NotNull String key) {
@@ -125,6 +131,8 @@ public class JsonSupport {
      * @param required {@code true} if this key is required, {@code false} if this key is optional
      * @return The parsed {@link JSONArray} value at the {@code key}, {@code null} if this key
      * is not found and the key is not required.
+     * @throws NullPointerException Thrown if the {@code key} is required and does not exist.
+     * @throws ClassCastException   The value of the key is not a list.
      */
     @Nullable
     static public JSONArray getJSONArray(@NotNull JSONObject dict, @NotNull String key, boolean required) {
@@ -143,6 +151,7 @@ public class JsonSupport {
      * @param key  The key for the value to be obtained.
      * @return The parsed {@link JSONObject} value at the {@code key}.
      * @throws NullPointerException Thrown if the {@code key} does not exist.
+     * @throws ClassCastException   The value of the key is not a dictionary.
      */
     @NotNull
     static public JSONObject getJSONObject(@NotNull JSONObject dict, @NotNull String key) {
@@ -159,6 +168,8 @@ public class JsonSupport {
      * @param required {@code true} if this key is required, {@code false} if this key is optional
      * @return The parsed {@link JSONObject} value at the {@code key}, {@code null} if this key
      * is not found and the key is not required.
+     * @throws NullPointerException Thrown if the {@code key} is required and does not exist.
+     * @throws ClassCastException   The value of the key is not a dictionary.
      */
     @Nullable
     static public JSONObject getJSONObject(@NotNull JSONObject dict, @NotNull String key, boolean required) {
@@ -179,6 +190,7 @@ public class JsonSupport {
      *                               or for some other reason cannot be opened for
      * @throws IOException           Error reading from the file.
      * @throws ParseException        JSON format error in the file contents.
+     * @throws ClassCastException    The contents of the JSON file is not a dictionary.
      */
     @NotNull
     static public JSONObject readJsonFileAsJSONObject(@NotNull String filename) throws
@@ -200,6 +212,7 @@ public class JsonSupport {
      *                               or for some other reason cannot be opened for
      * @throws IOException           Error reading from the file.
      * @throws ParseException        JSON format error in the file contents.
+     * @throws ClassCastException    The contents of the JSON file is not an array.
      */
     @NotNull
     static public JSONArray readJsonFileAsJSONArray(@NotNull String filename) throws
