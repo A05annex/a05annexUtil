@@ -1,8 +1,7 @@
 * **version:** 0.8.6
-* **status:** in development - do not use this yet
-* **comments:** We are in the process of pulling this library out of a larger code base
-  for release. Documentation and testing are incomplete, and while we are now using this
-  library, we don't think it is ready for prime-time use.
+* **status:** beta release
+* **comments:** We have been using this library for robot development since December 2020, and
+believe it is ready for use.
 
 # a05annexUtil
 Utility classes for use in First FTC/FRC robot code, but that are not dependent on either
