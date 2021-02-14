@@ -349,10 +349,10 @@ public class KochanekBartelsSpline {
             // NOTE: If the derivative has been edited, then we assume the edited derivative is the intended
             // derivative and should not be recomputed when the control point is moved.
             if (!m_locationDerivativesEdited) {
-                double fieldXprev = 0.0;
-                double fieldYprev = 0.0;
-                double fieldXnext = 0.0;
-                double fieldYnext = 0.0;
+                double fieldXprev = m_fieldX;
+                double fieldYprev = m_fieldY;
+                double fieldXnext = m_fieldX;
+                double fieldYnext = m_fieldY;
 
                 if (m_last != null) {
                     // There is a previous point
@@ -361,19 +361,18 @@ public class KochanekBartelsSpline {
                 } else if ((m_next != null) && (m_next.m_next != null)) {
                     // we are going to manufacture a previous point from the position of the next point
                     Vector2d chord = new Vector2d(m_fieldX, m_fieldY, m_next.m_fieldX, m_next.m_fieldY);
-                    chord.normalize();
-                    Vector2d nextVelocityVector = new Vector2d(m_next.m_dX, m_next.m_dY);
-                    double nextVelocity = nextVelocityVector.length();
-                    double dot = chord.dot(nextVelocityVector.scale(1.0 / nextVelocity));
-                    Vector2d difference = new Vector2d(nextVelocityVector, chord.scale(dot), Vector2d.VECTOR_SUBTRACT);
-                    Vector2d thisVelocityVector =
-                            new Vector2d(chord, difference, Vector2d.VECTOR_ADD).scale(nextVelocity);
-                    m_dX = thisVelocityVector.getI();
-                    m_dY = thisVelocityVector.getJ();
-                    return;
-                } else {
-                    fieldXprev = m_fieldX;
-                    fieldYprev = m_fieldY;
+                    if (chord.length() > Vector2d.ZERO_TOLERANCE) {
+                        chord.normalize();
+                        Vector2d nextVelocityVector = new Vector2d(m_next.m_dX, m_next.m_dY);
+                        double nextVelocity = nextVelocityVector.length();
+                        double dot = chord.dot(nextVelocityVector.scale(1.0 / nextVelocity));
+                        Vector2d difference = new Vector2d(nextVelocityVector, chord.scale(dot), Vector2d.VECTOR_SUBTRACT);
+                        Vector2d thisVelocityVector =
+                                new Vector2d(chord, difference, Vector2d.VECTOR_ADD).scale(nextVelocity);
+                        m_dX = thisVelocityVector.getI();
+                        m_dY = thisVelocityVector.getJ();
+                        return;
+                    }
                 }
 
                 if (m_next != null) {
@@ -382,19 +381,18 @@ public class KochanekBartelsSpline {
                 } else if ((m_last != null) && (m_last.m_last != null)) {
                     // we are going to manufacture a previous point from the position of the next point
                     Vector2d chord = new Vector2d(m_last.m_fieldX, m_last.m_fieldY, m_fieldX, m_fieldY);
-                    chord.normalize();
-                    Vector2d lastVelocityVector = new Vector2d(m_last.m_dX, m_last.m_dY);
-                    double lastVelocity = lastVelocityVector.length();
-                    double dot = chord.dot(lastVelocityVector.scale(1.0 / lastVelocity));
-                    Vector2d difference = new Vector2d(lastVelocityVector, chord.scale(dot), Vector2d.VECTOR_SUBTRACT);
-                    Vector2d thisVelocityVector =
-                            new Vector2d(chord, difference, Vector2d.VECTOR_ADD).scale(lastVelocity);
-                    m_dX = thisVelocityVector.getI();
-                    m_dY = thisVelocityVector.getJ();
-                    return;
-                } else {
-                    fieldXnext = m_fieldX;
-                    fieldYnext = m_fieldY;
+                    if (chord.length() > Vector2d.ZERO_TOLERANCE) {
+                        chord.normalize();
+                        Vector2d lastVelocityVector = new Vector2d(m_last.m_dX, m_last.m_dY);
+                        double lastVelocity = lastVelocityVector.length();
+                        double dot = chord.dot(lastVelocityVector.scale(1.0 / lastVelocity));
+                        Vector2d difference = new Vector2d(lastVelocityVector, chord.scale(dot), Vector2d.VECTOR_SUBTRACT);
+                        Vector2d thisVelocityVector =
+                                new Vector2d(chord, difference, Vector2d.VECTOR_ADD).scale(lastVelocity);
+                        m_dX = thisVelocityVector.getI();
+                        m_dY = thisVelocityVector.getJ();
+                        return;
+                    }
                 }
                 m_dX = DEFAULT_TENSION * (fieldXnext - fieldXprev);
                 m_dY = DEFAULT_TENSION * (fieldYnext - fieldYprev);

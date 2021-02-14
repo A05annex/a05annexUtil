@@ -7,6 +7,9 @@ import org.jetbrains.annotations.NotNull;
  * The description of a 2 dimensional vector represented by double values.
  */
 public class Vector2d {
+    // A really small tolerance to prevent divide by zero issues
+    public static final double ZERO_TOLERANCE = 0.00001;
+
     static public final int VECTOR_ADD = 0;
     static public final int VECTOR_SUBTRACT = 1;
 
@@ -82,7 +85,8 @@ public class Vector2d {
      * @return This vector after normalization.
      */
     public Vector2d normalize() {
-        return scale(1.0 / length());
+        double length = length();
+        return scale( length > ZERO_TOLERANCE ? 1.0 / length() : 0.0);
     }
 
     /**
