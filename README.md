@@ -1,4 +1,4 @@
-* **version:** 0.8.6
+* **version:** 0.8.7
 * **status:** beta release
 * **comments:** We have been using this library for robot development since December 2020, and
 believe it is ready for use.
@@ -40,10 +40,10 @@ The next most simple way to use **a05annexUtil**, following the advice from this
 [chiefdelphi post](https://www.chiefdelphi.com/t/adding-my-teams-library-as-a-vendor-library/339626)
 and advises you:
 * create a `libs` folder in your robot project
-* copy the `a05annxUtil-0.8.6.jar` file from the github 0.8.6 release into that `libs` folder
+* copy the `a05annxUtil-0.8.7.jar` file from the github 0.8.7 release into that `libs` folder
 * in the dependencies section of the `build.gradle` file add the line:  
   `compile fileTree(dir: 'libs', include: ['*.jar'])`
-* add the `libs/a05annxUtil-0.8.6.jar` to git so it is saved as part of your project.
+* add the `libs/a05annxUtil-0.8.7.jar` to git so it is saved as part of your project.
   
 The disadvantage of this method is that you must manually download the library and
 put it in your project, you also need to check for version updates.
@@ -74,7 +74,7 @@ repositories {
 }
 
 dependencies {
-    compile 'org.a05annex:a05annexUtil:0.8.6'
+    compile 'org.a05annex:a05annexUtil:0.8.7'
     ...
 }
 

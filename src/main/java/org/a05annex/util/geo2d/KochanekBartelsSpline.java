@@ -1071,8 +1071,10 @@ public class KochanekBartelsSpline {
      * Load a path from a {@code .json} path file.
      *
      * @param filename (String, not null) The name of the file the path will be read from.
+     * @return {@code true} if the path was successfully loaded, {@code false} otherwise. If the path was not
+     * successfully loaded, the path will be empty.
      */
-    public void loadPath(String filename) {
+    public boolean loadPath(String filename) {
         // The deal here is that we want to make sure we can read this file as a path before we
         // the existing path description.
         clearPath();
@@ -1105,21 +1107,22 @@ public class KochanekBartelsSpline {
             if (null != m_first) {
                 m_first.updateLocationDerivatives();
             }
-
+            return true;
 
         } catch (IOException | ParseException | ClassCastException | NullPointerException e) {
             e.printStackTrace();
         }
-
+        return false;
     }
 
     /**
      * Save the path to a {@code .json} path file.
      *
      * @param filename (String, not null) The filename the path will be written to.
+     * @return {@code true} if the path was successfully saved, {@code false} otherwise.
      */
     @SuppressWarnings("unchecked")
-    public void savePath(@NotNull String filename) {
+    public boolean savePath(@NotNull String filename) {
         JSONObject path = new JSONObject();
         path.put(TITLE, m_title);
         path.put(DESCRIPTION, m_description);
@@ -1132,9 +1135,11 @@ public class KochanekBartelsSpline {
         try (FileWriter file = new FileWriter(filename)) {
             file.write(path.toJSONString());
             file.flush();
+            return true;
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return false;
     }
 
 }
