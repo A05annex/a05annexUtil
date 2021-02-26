@@ -83,4 +83,24 @@ public final class Utl {
         return min;
     }
 
+    /**
+     * clip a value to be within the specified min-max range. Specifically, if {@code value} is
+     * less than {@code min}, then set it to {@code min}; if {@code value} is greater than {@code max},
+     * then set it to max.
+     * @param value The value to be clipped.
+     * @param min The minimum of the valid range. If {@code value} is less than {@code min},
+     *            then {@code min} will be returned. Set to {@link Double#NEGATIVE_INFINITY} if
+     *            there is no lower bound.
+     * @param max The maximum of the valid range. If {@code value} is greater than {@code max},
+     *            then {@code max} will be returned. Set to {@link Double#POSITIVE_INFINITY} if
+     *            there is no upper bound.
+     * @return Returns {@code value} clipped to the specified {@code min} {@code max} range.
+     * @throws IllegalArgumentException Thrown if {@code (min >= max)}.
+     */
+    public static double clip(double value, double min, double max) {
+        if (min >= max) {
+            throw new IllegalArgumentException("min must be less than max.");
+        }
+        return Math.min(Math.max(value, min), max);
+    }
 }

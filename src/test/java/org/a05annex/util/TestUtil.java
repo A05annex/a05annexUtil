@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * This is a set of tests for the methods in {@link Utl}.
@@ -100,4 +100,48 @@ public class TestUtil {
         assertEquals(-1.0,Utl.min(12.0, 4.0, -1.0));
     }
 
+    // -----------------------------------------------------------------------------------------------------------------
+    // Tests for the clip(...) method, test it performs as documented
+    // -----------------------------------------------------------------------------------------------------------------
+
+    @Test
+    @DisplayName("Test clip invalid args")
+    void test_clip_invalid_args() {
+        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
+                () -> Utl.clip(5.0, 10.0, 9.0));
+    }
+
+    @Test
+    @DisplayName("Test clip in range")
+    void test_clip_in_range() {
+        assertEquals(-9.99999, Utl.clip(-9.99999, -10.0, 10.0));
+        assertEquals(0.0, Utl.clip(0.0, -10.0, 10.0));
+        assertEquals(9.99999, Utl.clip(9.99999, -10.0, 10.0));
+    }
+
+    @Test
+    @DisplayName("Test clip min")
+    void test_clip_min() {
+        assertEquals(-10.0, Utl.clip(-10.00001, -10.0, 10.0));
+    }
+
+    @Test
+    @DisplayName("Test clip max")
+    void test_clip_max() {
+        assertEquals(10.0, Utl.clip(10.00001, -10.0, 10.0));
+    }
+
+    @Test
+    @DisplayName("Test clip no min")
+    void test_clip_no_min() {
+        assertEquals(-10.0, Utl.clip(-Double.MAX_VALUE, -10.0, 10.0));
+        assertEquals(-Double.MAX_VALUE, Utl.clip(-Double.MAX_VALUE, Double.NEGATIVE_INFINITY, 10.0));
+    }
+
+    @Test
+    @DisplayName("Test clip no max")
+    void test_clip_no_max() {
+        assertEquals(10.0, Utl.clip(Double.MAX_VALUE, -10.0, 10.0));
+        assertEquals(Double.MAX_VALUE, Utl.clip(Double.MAX_VALUE, -10.0, Double.POSITIVE_INFINITY));
+    }
 }
