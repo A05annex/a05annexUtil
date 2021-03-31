@@ -11,9 +11,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @RunWith(JUnitPlatform.class)
 public class TestSpline {
 
+    private static double REF_SPEED = 10.0;
     private static double START_END_X = 10.0;
     private static double START_END_Y = 20.0;
     private final KochanekBartelsSpline m_startEndDerivativeTest = new KochanekBartelsSpline();
+    private final KochanekBartelsSpline m_scaleSpeedTest = new KochanekBartelsSpline();
+    private final KochanekBartelsSpline.ControlPoint m_scaleSpeedTestStart;
+    private final KochanekBartelsSpline.ControlPoint m_scaleSpeedTestEnd;
 
     public TestSpline() {
         // create the test spline for the first set of tests - Start and end nearly coincident with the
@@ -21,6 +25,11 @@ public class TestSpline {
         m_startEndDerivativeTest.addControlPoint(START_END_X, START_END_Y);
         m_startEndDerivativeTest.addControlPoint(START_END_X, START_END_Y);
         m_startEndDerivativeTest.addControlPoint(START_END_X, START_END_Y);
+
+        m_scaleSpeedTestStart = m_scaleSpeedTest.addControlPoint(0.0, 0.0);
+        m_scaleSpeedTestStart.setTangent(REF_SPEED,0.0);
+        m_scaleSpeedTestEnd = m_scaleSpeedTest.addControlPoint(10.0, 0.0);
+        m_scaleSpeedTestEnd.setTangent(REF_SPEED,0.0);
     }
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -60,6 +69,24 @@ public class TestSpline {
     }
 
     /**
+     * Since all control points are coincident, the intermediate derivative should be 0.0
+     */
+    @Test
+    @DisplayName("Verify intermediate-derivative")
+    void testSet1_verifyIntermediateDerivative() {
+        KochanekBartelsSpline.ControlPoint intermediateControlPoint = null;
+        for (KochanekBartelsSpline.ControlPoint controlPoint : m_startEndDerivativeTest.getControlPoints()) {
+            if (null != intermediateControlPoint) {
+                intermediateControlPoint = controlPoint;
+                break;
+            }
+            intermediateControlPoint = controlPoint;
+        }
+        assertEquals(0.0, intermediateControlPoint.m_dX);
+        assertEquals(0.0, intermediateControlPoint.m_dY);
+    }
+
+    /**
      * Since all control points are coincident, the end derivative should be 0.0
      */
     @Test
@@ -73,5 +100,58 @@ public class TestSpline {
         assertEquals(0.0, lastControlPoint.m_dY);
     }
 
+    // -----------------------------------------------------------------------------------------------------------------
+    // Tests for adding a speed multiplier
+    // -----------------------------------------------------------------------------------------------------------------
+    @Test
+    @DisplayName("Verify speedMultiplier 1.0")
+    void testSet1_verifySpeedMultiplier_1() {
+        m_scaleSpeedTest.setSpeedMultiplier(1.0);
+        assertEquals(1.0, m_scaleSpeedTest.getSpeedMultiplier());
+        KochanekBartelsSpline.PathFollower follower = m_scaleSpeedTest.getPathFollower();
+        double time = 0.0;
+        KochanekBartelsSpline.PathPoint pathPt;
+        while (null != (pathPt = follower.getPointAt(time))) {
+//            System.out.printf("%10.3f, %10.3f, %10.3f, %10.3f, %10.3f %n",
+//                    pathPt.time, pathPt.speedForward, pathPt.speedStrafe, pathPt.speedRotation, pathPt.fieldPt.getX());
+            assertEquals(time, pathPt.time, 0.00001);
+            assertEquals(REF_SPEED, pathPt.speedStrafe, 0.00001);
+            time += 0.1;
+        }
+    }
+
+    @Test
+    @DisplayName("Verify speedMultiplier 0.5")
+    void testSet1_verifySpeedMultiplier_0_5() {
+        m_scaleSpeedTest.setSpeedMultiplier(0.5);
+        assertEquals(0.5, m_scaleSpeedTest.getSpeedMultiplier());
+        KochanekBartelsSpline.PathFollower follower = m_scaleSpeedTest.getPathFollower();
+        double time = 0.0;
+        KochanekBartelsSpline.PathPoint pathPt;
+        while (null != (pathPt = follower.getPointAt(time))) {
+//            System.out.printf("%10.3f, %10.3f, %10.3f, %10.3f, %10.3f %n",
+//                    pathPt.time, pathPt.speedForward, pathPt.speedStrafe, pathPt.speedRotation, pathPt.fieldPt.getX());
+            assertEquals(time * 0.5, pathPt.time, 0.00001);
+            assertEquals(REF_SPEED * 0.5, pathPt.speedStrafe, 0.00001);
+            time += 0.1;
+        }
+    }
+
+    @Test
+    @DisplayName("Verify speedMultiplier 1.5")
+    void testSet1_verifySpeedMultiplier_1_5() {
+        m_scaleSpeedTest.setSpeedMultiplier(1.5);
+        assertEquals(1.5, m_scaleSpeedTest.getSpeedMultiplier());
+        KochanekBartelsSpline.PathFollower follower = m_scaleSpeedTest.getPathFollower();
+        double time = 0.0;
+        KochanekBartelsSpline.PathPoint pathPt;
+        while (null != (pathPt = follower.getPointAt(time))) {
+//            System.out.printf("%10.3f, %10.3f, %10.3f, %10.3f, %10.3f %n",
+//                    pathPt.time, pathPt.speedForward, pathPt.speedStrafe, pathPt.speedRotation, pathPt.fieldPt.getX());
+            assertEquals(time * 1.5, pathPt.time, 0.00001);
+            assertEquals(REF_SPEED * 1.5, pathPt.speedStrafe, 0.00001);
+            time += 0.1;
+        }
+    }
 
 }

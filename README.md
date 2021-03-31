@@ -95,8 +95,18 @@ Specifically:
   * **`Plane2d`** - a 2d representation of a plane that we can use for collision testing between the robot
     and the field boundary or field elements during path planning.
 * **`JsonSupport`** - a class with helper functions to aid in reading/writing JSON files.
-* **`Utl`** - a class which extends the java `Math` class with variable argument `min()`, `max()`, and
-  `length()` functions.
+* **`Utl`** - a class which extends the java `Math` class with variable argument `min()`, `max()`,
+  `length()`, and `clip()` functions.
+  
+## Release Notes
+
+* version 0.8.7 - ??-Mar-2021 - Some convenience fixes:
+  * KochanekBartelsSpline: `load(...)` and `save(...)` now return `true`-`false` to indicate success or
+    failure of the load-save.
+  * Added the `Utl.clip(...)` function and with testing to support subsystem tuning branches.
+* version 0.8.6 - 14-Feb-2021 - Fixed issue #1, load problems for an empty (no control points) path.
+* version 0.8.5 - 26-Dec-2020 - The first real release. Things were mostly tested and documented.
+* version 0.8.0 - 18-nov-2020 - We were just trying to figure out the release process - please ignore this one
 
     
 

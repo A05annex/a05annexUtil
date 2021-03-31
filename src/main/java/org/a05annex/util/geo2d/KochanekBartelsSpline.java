@@ -32,6 +32,21 @@ import static org.a05annex.util.JsonSupport.*;
  * This class is primarily a container-editor for a doubly-linked list of control points, and a factory for
  * path point iterators (iterating through the path points), or path point followers (generating a series of
  * path points at specified times along the path).
+ * <p>
+ * <b>Handling Time</b>
+ * <p>
+ * Time expansion/compression, as well as specified unequal time intervals between control points are useful
+ * in modifying existing paths that generally work well, but could work better:
+ * <ul>
+ *     <li><b>expansion/compression</b> - The path time in the path definition is, for example, 10 seconds
+ *     in duration. The path designer would like to speed it up to 9 or 8 seconds; or slow it down to 11 or 12 seconds.
+ *     Instead of designing a new path with new control points, the path designer would like to scale the existing
+ *     path to be faster or slower.</li>
+ *     <li><b>repositioning control points in time</b> - The path is generally good, but, some control points
+ *     should be reached sooner or later than the 1 second default interval. The path designer would like to
+ *     reposition those points in time.</li>
+ * </ul>
+ *
  */
 public class KochanekBartelsSpline {
 
@@ -39,6 +54,7 @@ public class KochanekBartelsSpline {
     // these are the keys for the JSON representation of the spline.
     static final String TITLE = "title";
     static final String DESCRIPTION = "description";
+    static final String SPEED_MULTIPLIER = "speedMultiplier";
     static final String CONTROL_POINTS = "controlPoints";
     static final String FIELD_X = "fieldX";
     static final String FIELD_Y = "fieldY";
@@ -107,6 +123,8 @@ public class KochanekBartelsSpline {
      * The description of this path.
      */
     private String m_description = DEFAULT_DESCRIPTION;
+
+    private double m_speedMultiplier = 1.0;
     /**
      * The first control point in this doubly-linked list of control points for the spline.
      */
@@ -129,6 +147,8 @@ public class KochanekBartelsSpline {
     public static class PathPoint {
         public final ControlPoint previousControlPoint;
         public final ControlPoint nextControlPoint;
+
+        public final double time;
         /**
          * The point on the field where the robot should be when it reaches this point in the path.
          */
@@ -153,6 +173,7 @@ public class KochanekBartelsSpline {
         /**
          * Instantiate a Path Point.
          *
+         * @param time                 The time this point on the path occurs.
          * @param fieldX               The expected field X position of the robot in meters.
          * @param fieldY               The expected field Y position of the robot in meters.
          * @param fieldHeading         The expected heading of the robot in radians.
@@ -164,9 +185,10 @@ public class KochanekBartelsSpline {
          * @param nextControlPoint     (not null) The control point at the end of the curve segment
          *                             containing this path point.
          */
-        public PathPoint(double fieldX, double fieldY, double fieldHeading,
+        public PathPoint(double time, double fieldX, double fieldY, double fieldHeading,
                          double speedForward, double speedStrafe, double speedRotation,
                          @NotNull ControlPoint previousControlPoint, @NotNull ControlPoint nextControlPoint) {
+            this.time = time;
             this.previousControlPoint = previousControlPoint;
             this.nextControlPoint = nextControlPoint;
             this.fieldPt = new Point2D.Double(fieldX, fieldY);
@@ -210,6 +232,8 @@ public class KochanekBartelsSpline {
         double m_fieldY = 0.0;
         double m_fieldHeading = 0.0;
         double m_time;
+        // Have the location derivatives been edited? If so, then the user has explicitly set the derivatives
+        //  and them must be maintained, otherwise, derivatives are recomputed as control points are moved around.
         boolean m_locationDerivativesEdited = false;
         double m_dX = 0.0;
         double m_dY = 0.0;
@@ -417,14 +441,10 @@ public class KochanekBartelsSpline {
             return m_fieldY + (DERIVATIVE_UI_SCALE * m_dY);
         }
 
-        /**
-         * Set the tangent location, used during interactive curve editing. This method forwards the request
-         * to {@link #setTangentLocation(double, double)} which documents the actual behaviour.
-         *
-         * @param pt (not null, Point2D) The new field location for the tangent editing handle.
-         */
-        public void setTangentLocation(Point2D pt) {
-            setTangentLocation(pt.getX(), pt.getY());
+        public void setTangent(double dX, double dY) {
+            m_dX = dX;
+            m_dY = dY;
+            m_locationDerivativesEdited = true;
             // update the derivatives
             updateLocationDerivatives();
             if (m_last != null) {
@@ -436,8 +456,18 @@ public class KochanekBartelsSpline {
         }
 
         /**
+         * Set the tangent location, used during interactive curve editing. This method forwards the request
+         * to {@link #setTangentLocation(double, double)} which documents the actual behaviour.
+         *
+         * @param pt (not null, Point2D) The new field location for the tangent editing handle.
+         */
+        public void setTangentLocation(Point2D pt) {
+            setTangentLocation(pt.getX(), pt.getY());
+        }
+
+        /**
          * Set the tangent location, used during interactive curve editing. This method is normally called during
-         * an interactive manipulation of the tangent handle. When the tangent is manipulated through tis method
+         * an interactive manipulation of the tangent handle. When the tangent is manipulated through this method
          * it is marked as manually manipulated, and it will not be automatically updated as this or adjacent
          * control points are moved.
          *
@@ -445,9 +475,7 @@ public class KochanekBartelsSpline {
          * @param fieldY (double) The new field Y position of the tangent handle.
          */
         public void setTangentLocation(double fieldX, double fieldY) {
-            m_dX = (fieldX - m_fieldX) / DERIVATIVE_UI_SCALE;
-            m_dY = (fieldY - m_fieldY) / DERIVATIVE_UI_SCALE;
-            m_locationDerivativesEdited = true;
+            setTangent((fieldX - m_fieldX) / DERIVATIVE_UI_SCALE, (fieldY - m_fieldY) / DERIVATIVE_UI_SCALE);
         }
 
         public double getFieldHeading() {
@@ -651,6 +679,12 @@ public class KochanekBartelsSpline {
                 {0.0, 0.0, 0.0}
         };
 
+        final double m_speedMultiplier;
+
+        PathGenerator(double speedMultiplier) {
+            m_speedMultiplier = speedMultiplier;
+        }
+
         /**
          * Reset the {@link #m_segment} matrix when the control points for the segment are advanced.
          */
@@ -683,6 +717,7 @@ public class KochanekBartelsSpline {
          */
         protected PathPoint getPointOnSegment(double time) {
 
+            time *= m_speedMultiplier;
             while (time > m_thisSegmentEnd.m_time) {
                 // past the end of this segment, move on to the next.
                 m_thisSegmentStart = m_thisSegmentEnd;
@@ -727,10 +762,11 @@ public class KochanekBartelsSpline {
             // robot relative forward and strafe.
             double sinHeading = Math.sin(field[2]);
             double cosHeading = Math.cos(field[2]);
-            double forward = (dField[0] * sinHeading) + (dField[1] * cosHeading);
-            double strafe = (dField[0] * cosHeading) - (dField[1] * sinHeading);
+            double forward = ((dField[0] * sinHeading) + (dField[1] * cosHeading)) * m_speedMultiplier;
+            double strafe = ((dField[0] * cosHeading) - (dField[1] * sinHeading)) * m_speedMultiplier;
             // create and return the path point
-            return new PathPoint(field[0], field[1], field[2], forward, strafe, dField[2],
+            return new PathPoint(time, field[0], field[1], field[2], forward, strafe,
+                    dField[2] * m_speedMultiplier,
                     m_thisSegmentStart, m_thisSegmentEnd);
         }
     }
@@ -754,7 +790,8 @@ public class KochanekBartelsSpline {
          *
          * @param deltaTime The ime interval, in seconds, at which the iterator will return {@link PathPoint}s.
          */
-        private PathIterator(double deltaTime) {
+        private PathIterator(double deltaTime, double speedMultiplier) {
+            super(speedMultiplier);
             resetSegment();
             m_time = 0.0;
             m_deltaTime = deltaTime;
@@ -767,7 +804,7 @@ public class KochanekBartelsSpline {
          */
         @Override
         public boolean hasNext() {
-            return (null != m_thisSegmentEnd) && (m_time <= m_last.m_time);
+            return (null != m_thisSegmentEnd) && ((m_time * m_speedMultiplier) <= m_last.m_time);
         }
 
         /**
@@ -809,7 +846,8 @@ public class KochanekBartelsSpline {
         /**
          * Instantiate a path follower.
          */
-        private PathFollower() {
+        private PathFollower(double speedMultiplier) {
+            super(speedMultiplier);
             resetSegment();
         }
 
@@ -882,6 +920,14 @@ public class KochanekBartelsSpline {
         return m_description;
     }
 
+    public void setSpeedMultiplier(double speedMultiplier) {
+        m_speedMultiplier = speedMultiplier;
+    }
+
+    public double getSpeedMultiplier() {
+        return m_speedMultiplier;
+    }
+
     /**
      * Add a control point to the end of the path, which will extend that path to that new control point. This
      * method defers to {@link #addControlPoint(double, double, double)} with a heading of (@code 0.0}.
@@ -939,6 +985,7 @@ public class KochanekBartelsSpline {
         m_description = DEFAULT_DESCRIPTION;
         m_first = null;
         m_last = null;
+        m_speedMultiplier = 1.0;
     }
 
     /**
@@ -1039,7 +1086,7 @@ public class KochanekBartelsSpline {
      */
     @NotNull
     public Iterable<PathPoint> getCurveSegments() {
-        return new PathIterator(DEFAULT_PATH_DELTA);
+        return new PathIterator(DEFAULT_PATH_DELTA, m_speedMultiplier);
     }
 
     /**
@@ -1052,7 +1099,7 @@ public class KochanekBartelsSpline {
      */
     @NotNull
     public Iterable<PathPoint> getCurveSegments(double timeInterval) {
-        return new PathIterator(timeInterval);
+        return new PathIterator(timeInterval, m_speedMultiplier);
     }
 
     /**
@@ -1064,7 +1111,7 @@ public class KochanekBartelsSpline {
      */
     @NotNull
     public PathFollower getPathFollower() {
-        return new PathFollower();
+        return new PathFollower(m_speedMultiplier);
     }
 
     /**
@@ -1083,6 +1130,7 @@ public class KochanekBartelsSpline {
             JSONObject path = readJsonFileAsJSONObject(filename);
             m_title = parseString(path, TITLE, DEFAULT_TITLE);
             m_description = parseString(path, DESCRIPTION, DEFAULT_DESCRIPTION);
+            m_speedMultiplier = parseDouble(path, SPEED_MULTIPLIER, m_speedMultiplier);
             JSONArray controlPoints = getJSONArray(path, CONTROL_POINTS);
             for (Object cpObj : controlPoints) {
                 JSONObject cpJson = (JSONObject) cpObj;
@@ -1126,6 +1174,7 @@ public class KochanekBartelsSpline {
         JSONObject path = new JSONObject();
         path.put(TITLE, m_title);
         path.put(DESCRIPTION, m_description);
+        path.put(SPEED_MULTIPLIER, m_speedMultiplier);
         JSONArray controlPoints = new JSONArray();
         path.put(CONTROL_POINTS, controlPoints);
         for (ControlPoint pt : getControlPoints()) {
