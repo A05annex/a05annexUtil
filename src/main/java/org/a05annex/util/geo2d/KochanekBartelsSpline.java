@@ -1,6 +1,7 @@
 package org.a05annex.util.geo2d;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
@@ -46,7 +47,6 @@ import static org.a05annex.util.JsonSupport.*;
  *     should be reached sooner or later than the 1 second default interval. The path designer would like to
  *     reposition those points in time.</li>
  * </ul>
- *
  */
 public class KochanekBartelsSpline {
 
@@ -238,6 +238,14 @@ public class KochanekBartelsSpline {
         double m_dX = 0.0;
         double m_dY = 0.0;
         double m_dHeading = 0.0;
+        // These are never saved, they are always computed based on the saved tangents and the times of this
+        // point and the surrounding points.
+        double m_dXin = 0.0;
+        double m_dXout = 0.0;
+        double m_dYin = 0.0;
+        double m_dYout = 0.0;
+        double m_dHeadingIn = 0.0;
+        double m_dHeadingOut = 0.0;
 
         /**
          * Instantiate a control point and set the time this control point should be reached when the path
@@ -285,6 +293,28 @@ public class KochanekBartelsSpline {
         }
 
         /**
+         * Get the next control point on this curve.
+         *
+         * @return (nullable) The next control point on this curve. {@code null} if this is the last control
+         * point on the curve.
+         */
+        @Nullable
+        public ControlPoint getNext() {
+            return m_next;
+        }
+
+        /**
+         * Get the last (previous) control point on this curve.
+         *
+         * @return (nullable) The last (previous) point on this curve. {@code null} if this is the first control
+         * point on the curve.
+         */
+        @Nullable
+        public ControlPoint getLast() {
+            return m_last;
+        }
+
+        /**
          * Restore the control point to automated derivative recalculation when it or surrounding
          * control points are moved. This only effects points whose derivatives have been manually edited.
          */
@@ -322,6 +352,13 @@ public class KochanekBartelsSpline {
          */
         public double getFieldY() {
             return m_fieldY;
+        }
+
+        public double getRawTangentX() {
+            return m_dX;
+        }
+        public double getRawTangentY() {
+            return m_dY;
         }
 
         /**
@@ -403,7 +440,7 @@ public class KochanekBartelsSpline {
                     fieldXnext = m_next.m_fieldX;
                     fieldYnext = m_next.m_fieldY;
                 } else if ((m_last != null) && (m_last.m_last != null)) {
-                    // we are going to manufacture a previous point from the position of the next point
+                    // we are going to manufacture a next point from the position of the lastt point
                     Vector2d chord = new Vector2d(m_last.m_fieldX, m_last.m_fieldY, m_fieldX, m_fieldY);
                     if (chord.length() > Vector2d.ZERO_TOLERANCE) {
                         chord.normalize();
@@ -453,6 +490,25 @@ public class KochanekBartelsSpline {
             if (m_next != null) {
                 m_next.updateLocationDerivatives();
             }
+        }
+
+        void computeTangentInOut() {
+            if (m_next != null) {
+                double timeOut = m_next.m_time - m_time;
+                double outMult = timeOut;
+                m_dXout = m_dX * outMult;
+                m_dYout = m_dY * outMult;
+                m_dHeadingOut = m_dHeading * outMult;
+            }
+
+            if (m_last != null) {
+                double timeIn = m_time - m_last.m_time;
+                double inMult = timeIn;
+                m_dXin = m_dX * inMult;
+                m_dYin = m_dY * inMult;
+                m_dHeadingIn = m_dHeading * inMult;
+            }
+
         }
 
         /**
@@ -556,6 +612,51 @@ public class KochanekBartelsSpline {
                 m_dHeading = DEFAULT_HEADING_TENSION * (fieldHeadingNext - fieldHeadingPrev);
             }
         }
+
+        /**
+         * Get the time for this control point.
+         *
+         * @return The time this point on the path will be reached.
+         */
+        public double getTime() {
+            return m_time;
+        }
+
+        /**
+         * Reset the time for this control point, Note, the time for the first control point must always be 0.0,
+         * and cannot be changed.
+         *
+         * @param time      The new time, in seconds, for this control point. The time must be greater than the time
+         *                  of the last (previous) control point, and less than the time of the next control point.
+         * @param propagate {@code false} of the new time applies only to this point, {@code true} if the
+         *                  amount the time changes should propagate to all control points after this point. For
+         *                  example, if you had a path with 4 control points at times (0.0, 1.0, 2.0, 3.0) and
+         *                  you set the time of the second control point to 1.1: then without propagation only
+         *                  the second control point time will be modified as (0.0, 1.1, 2.0, 3.0); with propagation
+         *                  the following control points will also be shifted by 0.1 as (0.0, 1.1, 2.1, 3.1).
+         */
+        public void setTime(double time, boolean propagate) {
+            if (null == m_last) {
+                throw new IllegalArgumentException("The time of the first control point cannot be reset.");
+            }
+            if (time <= m_last.m_time) {
+                throw new IllegalArgumentException(
+                        "The time must be greater than the time of the previous control point.");
+            }
+            if ((null != m_next) && time >= m_next.m_time) {
+                throw new IllegalArgumentException("The time must be less than the time of the next control point.");
+            }
+            double delta = time - m_time;
+            m_time = time;
+            if (propagate) {
+                ControlPoint controlPoint = this;
+                while (null != controlPoint.m_next) {
+                    controlPoint = controlPoint.m_next;
+                    controlPoint.m_time += delta;
+                }
+            }
+        }
+
 
         /**
          * Test whether a field position (probably a mouse position during path editing) is over this control
@@ -682,6 +783,9 @@ public class KochanekBartelsSpline {
         final double m_speedMultiplier;
 
         PathGenerator(double speedMultiplier) {
+            if (m_first != null) {
+                m_first.computeTangentInOut();
+            }
             m_speedMultiplier = speedMultiplier;
         }
 
@@ -693,18 +797,19 @@ public class KochanekBartelsSpline {
                 // we are done with this spline, just return.
                 return;
             }
+            m_thisSegmentEnd.computeTangentInOut();
             m_segment[0][0] = m_thisSegmentStart.m_fieldX;
             m_segment[1][0] = m_thisSegmentEnd.m_fieldX;
-            m_segment[2][0] = m_thisSegmentStart.m_dX;
-            m_segment[3][0] = m_thisSegmentEnd.m_dX;
+            m_segment[2][0] = m_thisSegmentStart.m_dXout;
+            m_segment[3][0] = m_thisSegmentEnd.m_dXin;
             m_segment[0][1] = m_thisSegmentStart.m_fieldY;
             m_segment[1][1] = m_thisSegmentEnd.m_fieldY;
-            m_segment[2][1] = m_thisSegmentStart.m_dY;
-            m_segment[3][1] = m_thisSegmentEnd.m_dY;
+            m_segment[2][1] = m_thisSegmentStart.m_dYout;
+            m_segment[3][1] = m_thisSegmentEnd.m_dYin;
             m_segment[0][2] = m_thisSegmentStart.m_fieldHeading;
             m_segment[1][2] = m_thisSegmentEnd.m_fieldHeading;
-            m_segment[2][2] = m_thisSegmentStart.m_dHeading;
-            m_segment[3][2] = m_thisSegmentEnd.m_dHeading;
+            m_segment[2][2] = m_thisSegmentStart.m_dHeadingOut;
+            m_segment[3][2] = m_thisSegmentEnd.m_dHeadingIn;
         }
 
         /**
@@ -729,7 +834,7 @@ public class KochanekBartelsSpline {
                 resetSegment();
             }
             // create and return the path point
-            double sValue = time - m_thisSegmentStart.m_time;
+            double sValue = (time - m_thisSegmentStart.m_time) / (m_thisSegmentEnd.m_time - m_thisSegmentStart.m_time);
             // get the next point on the curve
             // The s[] vector is s to the third, second, first, and 0th power
             double[] s = {sValue * sValue * sValue, sValue * sValue, sValue, 1.0};
@@ -757,6 +862,11 @@ public class KochanekBartelsSpline {
                     field[i] += weights[j] * m_segment[j][i];
                     dField[i] += dWeights[j] * m_segment[j][i];
                 }
+            }
+
+            // Correct the derivatives for time
+            for (int i = 0; i < 3; i++) {
+                dField[i] /= (m_thisSegmentEnd.m_time - m_thisSegmentStart.m_time);
             }
             // OK, the position derivatives are X and Y relative to the field. These need to be transformed to
             // robot relative forward and strafe.
