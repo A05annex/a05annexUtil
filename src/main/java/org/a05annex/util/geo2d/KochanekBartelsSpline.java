@@ -158,6 +158,12 @@ public class KochanekBartelsSpline {
          */
         public final double fieldHeading;
         /**
+         *
+         */
+        public final double field_dX;
+        public final double field_dY;
+        public final double field_dHeading;
+        /**
          * The forward chassis velocity of the robot in meters/sec.
          */
         public final double speedForward;
@@ -177,6 +183,9 @@ public class KochanekBartelsSpline {
          * @param fieldX               The expected field X position of the robot in meters.
          * @param fieldY               The expected field Y position of the robot in meters.
          * @param fieldHeading         The expected heading of the robot in radians.
+         * @param field_dX             The expected field dX velocity of the robot in meters/sec.
+         * @param field_dY             The expected field dY velocity of the robot in meters/sec.
+         * @param field_dHeading       The expected dHeading of the robot in radians/sec.
          * @param speedForward         The forward chassis speed of the robot in meters/sec.
          * @param speedStrafe          The strafe chassis velocity of the robot in meters/sec.
          * @param speedRotation        The rotation speed of the robot in radians/sec.
@@ -186,6 +195,7 @@ public class KochanekBartelsSpline {
          *                             containing this path point.
          */
         public PathPoint(double time, double fieldX, double fieldY, double fieldHeading,
+                         double field_dX, double field_dY, double field_dHeading,
                          double speedForward, double speedStrafe, double speedRotation,
                          @NotNull ControlPoint previousControlPoint, @NotNull ControlPoint nextControlPoint) {
             this.time = time;
@@ -193,6 +203,9 @@ public class KochanekBartelsSpline {
             this.nextControlPoint = nextControlPoint;
             this.fieldPt = new Point2D.Double(fieldX, fieldY);
             this.fieldHeading = fieldHeading;
+            this.field_dX = field_dX;
+            this.field_dY = field_dY;
+            this.field_dHeading = field_dHeading;
             this.speedForward = speedForward;
             this.speedStrafe = speedStrafe;
             this.speedRotation = speedRotation;
@@ -357,6 +370,7 @@ public class KochanekBartelsSpline {
         public double getRawTangentX() {
             return m_dX;
         }
+
         public double getRawTangentY() {
             return m_dY;
         }
@@ -492,21 +506,19 @@ public class KochanekBartelsSpline {
             }
         }
 
-        void computeTangentInOut() {
+        private void pkgComputeTangentInOut() {
             if (m_next != null) {
-                double timeOut = m_next.m_time - m_time;
-                double outMult = timeOut;
-                m_dXout = m_dX * outMult;
-                m_dYout = m_dY * outMult;
-                m_dHeadingOut = m_dHeading * outMult;
+                double outScale = m_next.m_time - m_time;
+                m_dXout = m_dX * outScale;
+                m_dYout = m_dY * outScale;
+                m_dHeadingOut = m_dHeading * outScale;
             }
 
             if (m_last != null) {
-                double timeIn = m_time - m_last.m_time;
-                double inMult = timeIn;
-                m_dXin = m_dX * inMult;
-                m_dYin = m_dY * inMult;
-                m_dHeadingIn = m_dHeading * inMult;
+                double inScale = m_time - m_last.m_time;
+                m_dXin = m_dX * inScale;
+                m_dYin = m_dY * inScale;
+                m_dHeadingIn = m_dHeading * inScale;
             }
 
         }
@@ -784,7 +796,7 @@ public class KochanekBartelsSpline {
 
         PathGenerator(double speedMultiplier) {
             if (m_first != null) {
-                m_first.computeTangentInOut();
+                m_first.pkgComputeTangentInOut();
             }
             m_speedMultiplier = speedMultiplier;
         }
@@ -797,7 +809,7 @@ public class KochanekBartelsSpline {
                 // we are done with this spline, just return.
                 return;
             }
-            m_thisSegmentEnd.computeTangentInOut();
+            m_thisSegmentEnd.pkgComputeTangentInOut();
             m_segment[0][0] = m_thisSegmentStart.m_fieldX;
             m_segment[1][0] = m_thisSegmentEnd.m_fieldX;
             m_segment[2][0] = m_thisSegmentStart.m_dXout;
@@ -822,8 +834,8 @@ public class KochanekBartelsSpline {
          */
         protected PathPoint getPointOnSegment(double time) {
 
-            time *= m_speedMultiplier;
-            while (time > m_thisSegmentEnd.m_time) {
+            double pathTime = time * m_speedMultiplier;
+            while (pathTime > m_thisSegmentEnd.m_time) {
                 // past the end of this segment, move on to the next.
                 m_thisSegmentStart = m_thisSegmentEnd;
                 m_thisSegmentEnd = m_thisSegmentStart.m_next;
@@ -834,7 +846,7 @@ public class KochanekBartelsSpline {
                 resetSegment();
             }
             // create and return the path point
-            double sValue = (time - m_thisSegmentStart.m_time) / (m_thisSegmentEnd.m_time - m_thisSegmentStart.m_time);
+            double sValue = (pathTime - m_thisSegmentStart.m_time) / (m_thisSegmentEnd.m_time - m_thisSegmentStart.m_time);
             // get the next point on the curve
             // The s[] vector is s to the third, second, first, and 0th power
             double[] s = {sValue * sValue * sValue, sValue * sValue, sValue, 1.0};
@@ -875,8 +887,8 @@ public class KochanekBartelsSpline {
             double forward = ((dField[0] * sinHeading) + (dField[1] * cosHeading)) * m_speedMultiplier;
             double strafe = ((dField[0] * cosHeading) - (dField[1] * sinHeading)) * m_speedMultiplier;
             // create and return the path point
-            return new PathPoint(time, field[0], field[1], field[2], forward, strafe,
-                    dField[2] * m_speedMultiplier,
+            return new PathPoint(time, field[0], field[1], field[2], dField[0], dField[1], dField[2],
+                    forward, strafe, dField[2] * m_speedMultiplier,
                     m_thisSegmentStart, m_thisSegmentEnd);
         }
     }
@@ -1064,7 +1076,9 @@ public class KochanekBartelsSpline {
     }
 
     /**
-     * Add a control point to the end of the path, which will extend that path to that new control point.
+     * Add a control point to the end of the path, which will extend the path to that new control point at a time
+     * of 1.0 seconds after the end of the current path. If this is the first control point added to the path the
+     * time will be 0.0.
      *
      * @param fieldX       The X field position for the added control point.
      * @param fieldY       The field Y position for the added control point.
@@ -1073,7 +1087,31 @@ public class KochanekBartelsSpline {
      */
     @NotNull
     public ControlPoint addControlPoint(double fieldX, double fieldY, double fieldHeading) {
-        ControlPoint newControlPoint = new ControlPoint((null == m_last) ? 0.0 : m_last.m_time + 1.0);
+        return addControlPoint(fieldX, fieldY, fieldHeading, (null == m_last) ? 0.0 : m_last.m_time + 1.0);
+    }
+
+    /**
+     * Add a control point to the end of the path, which will extend that path to that new control point.
+     *
+     * @param fieldX       The X field position for the added control point.
+     * @param fieldY       The field Y position for the added control point.
+     * @param fieldHeading The heading for the added control point.
+     * @param time         The time the added control point should be reached. This should be greater than the time
+     *                     of the last control point, and will be set to time of the last control point + 1.0 if
+     *                     not. If this is the first control point of the path the time will be set to 0.0.
+     * @return Returns the added control point.
+     */
+    @NotNull
+    public ControlPoint addControlPoint(double fieldX, double fieldY, double fieldHeading, double time) {
+        // make the time valid
+        if (null == m_last) {
+            time = 0.0;
+        } else if (time <= m_last.m_time) {
+            time = m_last.m_time + 1.0;
+        }
+
+        // add the point to the end of the curve
+        ControlPoint newControlPoint = new ControlPoint(time);
         if (null == m_first) {
             m_first = newControlPoint;
         }
@@ -1099,65 +1137,78 @@ public class KochanekBartelsSpline {
     }
 
     /**
-     * Insert a control point at a specific field position and heading before an existing control point. When
-     * a control point is inserted the time for the following points is shifted to compensate for the insertion.
+     * Insert a control point at a specific PathPoint. NOTE, for this to behave as expected the speed multiplier
+     * must be 1.0 when the path point is generated.
      *
-     * @param controlPoint The existing control point the new control point will be inserted before.
-     * @param fieldX       The X field position for the added control point.
-     * @param fieldY       The field Y position for the added control point.
-     * @param fieldHeading The heading for the added control point.
+     * @param pathPoint The path point at which to insert the new control point.
      * @return Returns the added control point.
      */
     @NotNull
-    public ControlPoint insertControlPointBefore(@NotNull ControlPoint controlPoint,
-                                                 double fieldX, double fieldY, double fieldHeading) {
-        ControlPoint newControlPoint = new ControlPoint(controlPoint.m_time);
-        newControlPoint.m_last = controlPoint.m_last;
-        if (null == newControlPoint.m_last) {
-            // there is no last control point because this is being inserted in front of the first point
-            m_first = newControlPoint;
-        } else {
-            newControlPoint.m_last.m_next = newControlPoint;
+    public ControlPoint insertControlPoint(@NotNull PathPoint pathPoint) {
+        // validity testing
+        if (null == m_first) {
+            throw new IllegalStateException("There is no path to insert control points into.");
         }
-        newControlPoint.m_next = controlPoint;
-        controlPoint.m_last = newControlPoint;
-        // reset timing on all control points after this control point
-        ControlPoint tmpControlPoint = newControlPoint;
-        while (null != tmpControlPoint) {
-            if (null != tmpControlPoint.m_next) {
-                tmpControlPoint.m_time = tmpControlPoint.m_next.m_time;
-            } else {
-                tmpControlPoint.m_time += 1.0;
-            }
-            tmpControlPoint = tmpControlPoint.m_next;
-        }
-        // set the location and heading for this control point
-        newControlPoint.setFieldLocation(fieldX, fieldY);
-        newControlPoint.setFieldHeading(fieldHeading);
+
+        // The path point has all the information we need for inserting the new point. The deal here is we insert
+        // the control point with the path point parameters so that the curve is essentially unchanged by the insertion.
+
+        // Create
+        ControlPoint newControlPoint = new ControlPoint(pathPoint.time);
+        newControlPoint.m_last = pathPoint.previousControlPoint;
+        pathPoint.nextControlPoint.m_last = newControlPoint;
+        newControlPoint.m_next = pathPoint.nextControlPoint;
+        pathPoint.previousControlPoint.m_next = newControlPoint;
+
+        // set the location, heading, and derivatives for this control point
+        newControlPoint.setFieldLocation(pathPoint.fieldPt.getX(), pathPoint.fieldPt.getY());
+        newControlPoint.setFieldHeading(pathPoint.fieldHeading);
+        newControlPoint.setTangent(pathPoint.field_dX, pathPoint.field_dY);
         return newControlPoint;
     }
 
     /**
-     * Delete the specified control point. When a control point is deleted the time for the following points
-     * is shifted to compensate for the deletion.
+     * Insert a control point at a specified time along the path. There must be a path (i.e. at least a start
+     * and an end control point) before a control point can be inserted.
+     *
+     * @param time The time the point should be inserted, which must be greater than 0.0 and
+     *             less than the time the path ends.
+     * @return Returns the added control point.
+     */
+    @NotNull
+    public ControlPoint insertControlPoint(double time) {
+        // validity testing
+        if (null == m_first || m_first == m_last) {
+            throw new IllegalStateException("There is no path to insert control points into.");
+        }
+        if (time <= 0.0) {
+            throw new IllegalArgumentException("The time for an inserted control point must be greater than 0.0.");
+        } else if (time >= m_last.m_time) {
+            throw new IllegalArgumentException(
+                    "The time for an inserted control point must be less than the time of the last point.");
+        }
+
+        // get the point on the path at the specified time
+        PathFollower pathFollower = new PathFollower(1.0);
+        PathPoint pathPoint = pathFollower.getPointAt(time);
+        return insertControlPoint(pathPoint);
+    }
+
+    /**
+     * Delete the specified control point. The first control point cannot be deleted. When a control point is
+     * deleted there are no changes to adjacent control points except for the re-computation of derivatives
+     * at adjacent control points if they have not been specifically set..
      *
      * @param controlPoint The control point to be deleted.
      */
     public void deleteControlPoint(@NotNull ControlPoint controlPoint) {
         // shift the time of any point past the one to be deleted.
-        ControlPoint tmpControlPoint = m_last;
-        while (controlPoint != tmpControlPoint) {
-            tmpControlPoint.m_time = tmpControlPoint.m_last.m_time;
-            tmpControlPoint = tmpControlPoint.m_last;
+        if (null == controlPoint.m_last) {
+            throw new IllegalStateException("The initial point of a path cannot be deleted.");
         }
 
         // now delete the point (remove it from the list)
-        if (null != controlPoint.m_last) {
-            controlPoint.m_last.m_next = controlPoint.m_next;
-        } else {
-            // this s the first point being deleted
-            m_first = controlPoint.m_next;
-        }
+        controlPoint.m_last.m_next = controlPoint.m_next;
         if (null != controlPoint.m_next) {
             controlPoint.m_next.m_last = controlPoint.m_last;
         } else {

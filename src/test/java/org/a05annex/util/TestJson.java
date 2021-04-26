@@ -12,7 +12,6 @@ import java.awt.geom.Point2D;
 import java.io.IOException;
 
 import static org.a05annex.util.JsonSupport.*;
-import static org.a05annex.util.JsonSupport.parsePoint;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -31,8 +30,8 @@ public class TestJson {
      */
     @Test
     @DisplayName("file does not exist")
-    void test_file_does_not_exist() {
-        IOException thrown = assertThrows(IOException.class,
+     void test_file_does_not_exist() {
+        assertThrows(IOException.class,
                 () -> readJsonFileAsJSONObject("./src/test/resources/junk"));
     }
 
@@ -42,7 +41,7 @@ public class TestJson {
     @Test
     @DisplayName("not valid JSON")
     void test_bad_JSON_format() {
-        ParseException thrown = assertThrows(ParseException.class,
+        assertThrows(ParseException.class,
                 () -> readJsonFileAsJSONObject("./src/test/resources/TestBadFormat.json"));
     }
 
@@ -73,9 +72,7 @@ public class TestJson {
     void test_read_JSON_array() {
         try {
             JSONArray jsonArray = readJsonFileAsJSONArray("./src/test/resources/testList.json");
-        } catch (IOException e) {
-            fail(e);
-        } catch (ParseException e) {
+        } catch (IOException | ParseException e) {
             fail(e);
         }
     }
@@ -150,10 +147,10 @@ public class TestJson {
         assertNotNull(jsonObj);
         if (null != jsonObj) {
             // test booleans that is specified
-            assertEquals(parseBoolean(jsonObj, "valueTrue", false), true);
-            assertEquals(parseBoolean(jsonObj, "valueFalse", true), false);
+            assertTrue(parseBoolean(jsonObj, "valueTrue", false));
+            assertFalse(parseBoolean(jsonObj, "valueFalse", true));
             // Test a boolean that is not specified to make sure it defaults correctly
-            assertEquals(parseBoolean(jsonObj, "missingBoolean", false), false);
+            assertFalse(parseBoolean(jsonObj, "missingBoolean", false));
             // If the value at this key is not a number there will be a ClassCastException thrown.
             assertThrows(ClassCastException.class, () -> parseBoolean(jsonObj, "valueString", false));
             assertThrows(ClassCastException.class, () -> parseBoolean(jsonObj, "valueDouble", false));
@@ -243,9 +240,7 @@ public class TestJson {
     private JSONObject readTestDictionary() {
         try {
             return readJsonFileAsJSONObject("./src/test/resources/testDict.json");
-        } catch (IOException e) {
-            fail(e);
-        } catch (ParseException e) {
+        } catch (IOException | ParseException e) {
             fail(e);
         }
         return null;

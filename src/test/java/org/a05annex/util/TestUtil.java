@@ -107,7 +107,7 @@ public class TestUtil {
     @Test
     @DisplayName("Test clip invalid args")
     void test_clip_invalid_args() {
-        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
+        assertThrows(IllegalArgumentException.class,
                 () -> Utl.clip(5.0, 10.0, 9.0));
     }
 

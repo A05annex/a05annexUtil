@@ -1,5 +1,6 @@
 package org.a05annex.util.geo2d;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
@@ -7,15 +8,14 @@ import org.junit.runner.RunWith;
 
 import java.awt.geom.Point2D;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @RunWith(JUnitPlatform.class)
 public class TestPlane2d {
 
-    static private double IS_ON_TOLERANCE = 0.0000001;
-    static private double IS_IN_TOLERANCE = 0.05;
+    static private final double IS_ON_TOLERANCE = 0.0000001;
+    static private final double IS_IN_TOLERANCE = 0.05;
 
     // a plane parallel to X passing through y=5 with outside when y > 5
     private final Plane2d m_x5 = new Plane2d(0.0, 1.0, -5.0);
@@ -51,15 +51,15 @@ public class TestPlane2d {
     }
 
     /**
-     * This is a test of points that are on the planes kake sure they do not test as being inside the planes
+     * This is a test of points that are on the planes to make sure they do not test as being inside the planes
      * when there is a positive tolerance.
      */
     @Test
     @DisplayName("Test plane isIn 1")
     void test_isIn_1() {
-        assertFalse(m_x5.isIn(new Point2D.Double(0.0, 5.0), IS_IN_TOLERANCE));
-        assertFalse(m_y5.isIn(new Point2D.Double(5.0, 0.0), IS_IN_TOLERANCE));
-        assertFalse(m_at45deg.isIn(new Point2D.Double(Math.sqrt(2.0)/2.0,
+        Assertions.assertFalse(m_x5.isIn(new Point2D.Double(0.0, 5.0), IS_IN_TOLERANCE));
+        Assertions.assertFalse(m_y5.isIn(new Point2D.Double(5.0, 0.0), IS_IN_TOLERANCE));
+        Assertions.assertFalse(m_at45deg.isIn(new Point2D.Double(Math.sqrt(2.0)/2.0,
                 Math.sqrt(2.0)/2.0), IS_IN_TOLERANCE));
     }
 
@@ -71,8 +71,8 @@ public class TestPlane2d {
     void test_isIn_2() {
         assertTrue(m_x5.isIn(new Point2D.Double(0.0, 5.0 - (1.01 * IS_IN_TOLERANCE)), IS_IN_TOLERANCE));
         assertTrue(m_y5.isIn(new Point2D.Double(5.0 - (1.01 * IS_IN_TOLERANCE), 0.0), IS_IN_TOLERANCE));
-        assertTrue(m_at45deg.isIn(new Point2D.Double(((1.0 - (1.01 * IS_IN_TOLERANCE)) * Math.sqrt(2.0))/2.0,
-                ((1.0 - (1.01 * IS_IN_TOLERANCE)) * Math.sqrt(2.0))/2.0), IS_IN_TOLERANCE));
+        double xy = ((1.0 - (1.01 * IS_IN_TOLERANCE)) * Math.sqrt(2.0)) / 2.0;
+        assertTrue(m_at45deg.isIn(new Point2D.Double(xy,xy), IS_IN_TOLERANCE));
     }
 
     /**
@@ -81,9 +81,9 @@ public class TestPlane2d {
     @Test
     @DisplayName("Test plane isIn 3")
     void test_isIn_3() {
-        assertFalse(m_x5.isIn(new Point2D.Double(0.0, 5.0 - (0.99 * IS_IN_TOLERANCE)), IS_IN_TOLERANCE));
-        assertFalse(m_y5.isIn(new Point2D.Double(5.0 - (0.99 * IS_IN_TOLERANCE), 0.0), IS_IN_TOLERANCE));
-        assertFalse(m_at45deg.isIn(new Point2D.Double(((1.0 - (0.99 * IS_IN_TOLERANCE)) * Math.sqrt(2.0))/2.0,
-                ((1.0 - (0.99 * IS_IN_TOLERANCE)) * Math.sqrt(2.0))/2.0), IS_IN_TOLERANCE));
+        Assertions.assertFalse(m_x5.isIn(new Point2D.Double(0.0, 5.0 - (0.99 * IS_IN_TOLERANCE)), IS_IN_TOLERANCE));
+        Assertions.assertFalse(m_y5.isIn(new Point2D.Double(5.0 - (0.99 * IS_IN_TOLERANCE), 0.0), IS_IN_TOLERANCE));
+        double xy = ((1.0 - (0.99 * IS_IN_TOLERANCE)) * Math.sqrt(2.0)) / 2.0;
+        Assertions.assertFalse(m_at45deg.isIn(new Point2D.Double(xy, xy), IS_IN_TOLERANCE));
     }
 }
