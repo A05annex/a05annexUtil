@@ -100,13 +100,20 @@ Specifically:
   
 ## Release Notes
 
-* version 0.8.7 - ??-Mar-2021 - Some convenience fixes:
-  * KochanekBartelsSpline: `load(...)` and `save(...)` now return `true`-`false` to indicate success or
-    failure of the load-save.
+* version 0.8.7 - 25-Apr-2021 - Some convenience fixes:
+  * KochanekBartelsSpline:
+    * `load(...)` and `save(...)` now return `true`-`false` to indicate success or
+      failure of the load-save;
+    * added a speed multiplier, allowing the speed of path traversal to be uniformly scaled up or down;
+    * added time control for individual points on the path allowing path segment speeds to te
+      finely controlled relative to other path segments;
+    * adjusted the operation of `controlPointDelete()` and `controlPointInsert()` for minimal disruption of
+      path geometry and timing when they are used;
+    * more complete unit testing for the spline operators.
   * Added the `Utl.clip(...)` function and with testing to support subsystem tuning branches.
 * version 0.8.6 - 14-Feb-2021 - Fixed issue #1, load problems for an empty (no control points) path.
 * version 0.8.5 - 26-Dec-2020 - The first real release. Things were mostly tested and documented.
-* version 0.8.0 - 18-nov-2020 - We were just trying to figure out the release process - please ignore this one
+* version 0.8.0 - 18-Nov-2020 - We were just trying to figure out the release process - please ignore this one
 
     
 
