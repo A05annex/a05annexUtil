@@ -25,7 +25,7 @@ There are several paths for inclusion.
 Simply add it to the dependencies section of your `gradle.build` file as:
 ```
 dependencies {
-    compile 'org.a05annex:a05annexUtil:0.8.6'
+    compile 'org.a05annex:a05annexUtil:0.8.7'
      .
      .
      .
