@@ -16,13 +16,13 @@ public class AngleD {
     public static final int RADIANS = 1;
 
     /**
-     * The conversion factor for radians to degrees. Normally <tt>AngledD</tt> handles any conversions you need
+     * The conversion factor for radians to degrees. Normally <code>AngledD</code> handles any conversions you need
      * so there is probably no reason to ever use this.
      */
     private static final double RADIANS_TO_DEGREES = 180.0 / Math.PI;
 
     /**
-     * The conversion factor for degrees to radians. Normally <tt>AngleD</tt> handles any conversions you need
+     * The conversion factor for degrees to radians. Normally <code>AngleD</code> handles any conversions you need
      * so there is probably no reason to ever use this.
      */
     public static final double DEGREES_TO_RADIANS = Math.PI / 180.0;
@@ -31,7 +31,7 @@ public class AngleD {
 
 
     /**
-     * Creates a new instance of <tt>AngleD</tt>
+     * Creates a new instance of <code>AngleD</code>
      */
     public AngleD() {
     }

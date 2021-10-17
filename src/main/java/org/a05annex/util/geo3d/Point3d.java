@@ -15,13 +15,13 @@ public class Point3d {
     double z;
 
     /**
-     * Creates a new instance of <tt>Point3f</tt> initialized to the origin.
+     * Creates a new instance of <code>Point3f</code> initialized to the origin.
      */
     public Point3d() {
     }
 
     /**
-     * Creates a new instance of <tt>Point3f</tt> initialized to a specified location.
+     * Creates a new instance of <code>Point3f</code> initialized to a specified location.
      *
      * @param x The X coordinate of the point.
      * @param y The Y coordinate of the point.
@@ -32,7 +32,7 @@ public class Point3d {
     }
 
     /**
-     * Creates a new instance of <tt>Point3f</tt> initialized to a specified location.
+     * Creates a new instance of <code>Point3f</code> initialized to a specified location.
      *
      * @param ptInit The location of the instantiated point.
      */
@@ -111,7 +111,7 @@ public class Point3d {
 //     * Get the perpendicular distance from this point to a plane.
 //     *
 //     * @param pln The plane
-//     * @return Returns the distance to the plane,<tt>pln</tt>.
+//     * @return Returns the distance to the plane,<code>pln</code>.
 //     */
 //    public float getDistanceTo(final Plane3f pln) {
 //        return (pln.A * x) + (pln.B * y) + (pln.C * z) + pln.D;
@@ -121,7 +121,7 @@ public class Point3d {
      * Get the geometric (straight line) distance from this point to another point.
      *
      * @param pt The other point.
-     * @return Returns the distance between this point and another point, <tt>pt</tt>
+     * @return Returns the distance between this point and another point, <code>pt</code>
      */
     public double getDistanceTo(final Point3d pt) {
         final double dx = x - pt.x;
@@ -138,37 +138,37 @@ public class Point3d {
      * that, we simply get the distance between the two points.
      *
      * @param ln The line we will get the perpendicular distance from.  For best results, the line should be normalized.
-     * @return Returns the perpendicular distance from this point to the line <tt>ln</tt>.
+     * @return Returns the perpendicular distance from this point to the line <code>ln</code>.
      */
 //    public float getDistanceTo(final Line3f ln) {
 //        // get the D of the plane
-//        final float fD = -((ln.m_vDir.i * ln.m_ptOrg.x) + (ln.m_vDir.j * ln.m_ptOrg.y) + (ln.m_vDir.k * ln.m_ptOrg.z));
+//        final float fD = -((ln.direction.i * ln.origin.x) + (ln.direction.j * ln.origin.y) + (ln.direction.k * ln.origin.z));
 //        // get the distance from this point to the plane
-//        final float fPlaneDist = (ln.m_vDir.i * x) + (ln.m_vDir.j * y) + (ln.m_vDir.k * z) + fD;
+//        final float fPlaneDist = (ln.direction.i * x) + (ln.direction.j * y) + (ln.direction.k * z) + fD;
 //        // get the point on the line that is in the same perpendicular plane as this point, and then get the distance
-//        final float dx = x - (ln.m_ptOrg.x + (fPlaneDist * ln.m_vDir.i));
-//        final float dy = y - (ln.m_ptOrg.y + (fPlaneDist * ln.m_vDir.j));
-//        final float dz = z - (ln.m_ptOrg.z + (fPlaneDist * ln.m_vDir.k));
+//        final float dx = x - (ln.origin.x + (fPlaneDist * ln.direction.i));
+//        final float dy = y - (ln.origin.y + (fPlaneDist * ln.direction.j));
+//        final float dz = z - (ln.origin.z + (fPlaneDist * ln.direction.k));
 //        return (float) Math.sqrt((dx * dx) + (dy * dy) + (dz * dz));
 //    }
 
     /**
-     * Tests another point, <tt>pt</tt>, for equality with this vector.
+     * Tests another point, <code>pt</code>, for equality with this vector.
      *
      * @param pt The point to be tested.  This point is unchanged.
-     * @return Returns <tt>true</tt> if <tt>pt</tt> is equal to this point (identical
-     * in all coordinates), and <tt>false</tt> otherwise.
+     * @return Returns <code>true</code> if <code>pt</code> is equal to this point (identical
+     * in all coordinates), and <code>false</code> otherwise.
      */
     public boolean equals(final Point3d pt) {
         return this == pt || ((null != pt) && (!(x != pt.x)) && (!(y != pt.y)) && (!(z != pt.z)));
     }
 
     /**
-     * Tests another object, <tt>obj</tt>, for equality with this point.
+     * Tests another object, <code>obj</code>, for equality with this point.
      *
      * @param obj The object to be tested.  This object is unchanged.
-     * @return Returns <tt>true</tt> if <tt>obj</tt> is equal to this point (also a <tt>Point3d</tt> and
-     * identical in all coordinates), and <tt>false</tt> otherwise.
+     * @return Returns <code>true</code> if <code>obj</code> is equal to this point (also a <code>Point3d</code> and
+     * identical in all coordinates), and <code>false</code> otherwise.
      */
     @Override
     public boolean equals(final Object obj) {

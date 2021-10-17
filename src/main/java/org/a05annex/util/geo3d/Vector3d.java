@@ -15,14 +15,14 @@ public class Vector3d {
     double k;
 
     /**
-     * Creates a new instance of <tt>Vector3f</tt>.  This uses the default
+     * Creates a new instance of <code>Vector3f</code>.  This uses the default
      * initialization of the fields setting the vector to 0,0,0.
      */
     public Vector3d() {
     }
 
     /**
-     * Creates a new instance of <tt>Vector3f</tt> with the I, J, and K components
+     * Creates a new instance of <code>Vector3f</code> with the I, J, and K components
      * set as specified.  No normalization is performed, the values are set exactly as
      * specified.
      *
@@ -35,7 +35,7 @@ public class Vector3d {
     }
 
     /**
-     * Creates a new instance of <tt>Vector3f</tt> set equal to another vector.
+     * Creates a new instance of <code>Vector3f</code> set equal to another vector.
      *
      * @param v The vector to make this new vector equal to.
      */
@@ -45,9 +45,9 @@ public class Vector3d {
     }
 
     /**
-     * Creates a new instance of <tt>Vector3f</tt> initialized to be a vector from <tt>ptOrg</tt> to
-     * <tt>ptThru</tt>.  This length of this vector is equal to the distance from <tt>ptOrg</tt> to
-     * <tt>ptThru</tt>.  The vector should be normalized if you need a direction vector.
+     * Creates a new instance of <code>Vector3f</code> initialized to be a vector from <code>ptOrg</code> to
+     * <code>ptThru</code>.  This length of this vector is equal to the distance from <code>ptOrg</code> to
+     * <code>ptThru</code>.  The vector should be normalized if you need a direction vector.
      *
      * @param ptOrg  The start of the vector.
      * @param ptThru The end of the vector.
@@ -97,8 +97,8 @@ public class Vector3d {
     }
 
     /**
-     * Sets the value of the vector to be a vector from <tt>ptOrg</tt> to <tt>ptThru</tt>.  This
-     * length of this vector is equal to the distance from <tt>ptOrg</tt> to <tt>ptThru</tt>.  The
+     * Sets the value of the vector to be a vector from <code>ptOrg</code> to <code>ptThru</code>.  This
+     * length of this vector is equal to the distance from <code>ptOrg</code> to <code>ptThru</code>.  The
      * vector should be normalized if you need a direction vector.
      *
      * @param ptOrg  The start of the vector.
@@ -110,10 +110,10 @@ public class Vector3d {
     }
 
     /**
-     * Sets the value of this vector (each of the components) to be equal to some other vector, <tt>v</tt>.
+     * Sets the value of this vector (each of the components) to be equal to some other vector, <code>v</code>.
      *
      * @param v The vector to make this vector equal to.  The value of this vector is unchanged.
-     * @return Returns this vector with its components set equal to vector <tt>v</tt>.
+     * @return Returns this vector with its components set equal to vector <code>v</code>.
      */
     public Vector3d setValue(final Vector3d v) {
         i = v.i;
@@ -135,20 +135,20 @@ public class Vector3d {
     }
 
     /**
-     * Gets the dot product between this vector and another vector, <tt>v</tt>.
+     * Gets the dot product between this vector and another vector, <code>v</code>.
      *
      * @param v The vector against which we take the dot product.  The value of this vector is unchanged.
-     * @return Returns the dot product between this vector and vector <tt>v</tt>.
+     * @return Returns the dot product between this vector and vector <code>v</code>.
      */
     public double dot(final Vector3d v) {
         return (i * v.i) + (j * v.j) + (k * v.k);
     }
 
     /**
-     * Adds a vector, <tt>v</tt>, to this vector.
+     * Adds a vector, <code>v</code>, to this vector.
      *
      * @param v The vector to be added to this vector.  The value of this vector is unchanged.
-     * @return Returns this vector after vector <tt>v</tt> has been added.
+     * @return Returns this vector after vector <code>v</code> has been added.
      */
     public Vector3d add(final Vector3d v) {
         i += v.i;
@@ -158,10 +158,10 @@ public class Vector3d {
     }
 
     /**
-     * Subtracts a vector, <tt>v</tt>, from this vector.
+     * Subtracts a vector, <code>v</code>, from this vector.
      *
      * @param v The vector to be subtracted from this vector.  The value of this vector is unchanged.
-     * @return Returns this vector after vector <tt>v</tt> has been subtracted.
+     * @return Returns this vector after vector <code>v</code> has been subtracted.
      */
     public Vector3d subtract(final Vector3d v) {
         i -= v.i;
@@ -171,13 +171,13 @@ public class Vector3d {
     }
 
     /**
-     * Cross this vector with another vector, <tt>v</tt>.  The cross product produces a vector perpendicular to the 2 vectors
+     * Cross this vector with another vector, <code>v</code>.  The cross product produces a vector perpendicular to the 2 vectors
      * crossed.  Specifically, the X axis crossed with the Y axis will produce the Z axis, while the cross of the Y axis with the
      * X axis will produce the -Z axis.  NOTE: i cross j = k; j cross k = i; and k cross i = j regardless of the handedness of
      * the coordinate system being used.
      *
      * @param v The vector to be crossed with this vector.  The value of this vector is unchanged.
-     * @return Returns this vector after vector <tt>v</tt> has been subtracted.
+     * @return Returns this vector after vector <code>v</code> has been subtracted.
      */
     public Vector3d cross(final Vector3d v) {
         setValue((j * v.k) - (k * v.j),
@@ -225,11 +225,11 @@ public class Vector3d {
     }
 
     /**
-     * Tests another vector, <tt>v</tt>, for equality with this vector.
+     * Tests another vector, <code>v</code>, for equality with this vector.
      *
      * @param v The vector to be tested.  This vector is unchanged.
-     * @return Returns <tt>true</tt> if <tt>v</tt> is equal to this vector (identical
-     * in all components), and <tt>false</tt> otherwise.
+     * @return Returns <code>true</code> if <code>v</code> is equal to this vector (identical
+     * in all components), and <code>false</code> otherwise.
      */
     public boolean equals(final Vector3d v) {
         if (this == v) {
@@ -239,11 +239,11 @@ public class Vector3d {
     }
 
     /**
-     * Tests another object, <tt>obj</tt>, for equality with this vector.
+     * Tests another object, <code>obj</code>, for equality with this vector.
      *
      * @param obj The object to be tested.  This object is unchanged.
-     * @return Returns <tt>true</tt> if <tt>obj</tt> is equal to this vector (also a <tt>Vector3f</tt> and
-     * identical in all components), and <tt>false</tt> otherwise.
+     * @return Returns <code>true</code> if <code>obj</code> is equal to this vector (also a <code>Vector3f</code> and
+     * identical in all components), and <code>false</code> otherwise.
      */
     public boolean equals(final Object obj) {
         if ((null == obj) ||

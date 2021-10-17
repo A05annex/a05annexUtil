@@ -24,13 +24,13 @@ public class Plane3d {
     //-------------------------------------------------------------------------------------------------------------------------
 
     /**
-     * Creates a new uninitialized instance of <tt>Plane3d</tt>.
+     * Creates a new uninitialized instance of <code>Plane3d</code>.
      */
     public Plane3d() {
     }
 
     /**
-     * Instantiates an initialized instance of <tt>Plane3d</tt>.
+     * Instantiates an initialized instance of <code>Plane3d</code>.
      *
      * @param A The <b>A</b> coefficient of the plane equation.
      * @param B The <b>B</b> coefficient of the plane equation.
@@ -42,7 +42,7 @@ public class Plane3d {
     }
 
     /**
-     * Instantiates an initialized instance of <tt>Plane3d</tt>.
+     * Instantiates an initialized instance of <code>Plane3d</code>.
      *
      * @param normal The normal of the plane. NOTE: the normal is not re-normalized as part of the
      *               initialization.  If there is any question about whether the normal is a unit vector,
@@ -119,7 +119,7 @@ public class Plane3d {
      * is normalized.
      *
      * @param normal The vector to be set to the normal.
-     * @return The vector <tt>normal</tt> is returned.
+     * @return The vector <code>normal</code> is returned.
      */
     public Vector3d getNormal(final Vector3d normal) {
         normal.i = A;
@@ -131,11 +131,11 @@ public class Plane3d {
     //-------------------------------------------------------------------------------------------------------------------------
 
     /**
-     * Tests another plane, <tt>pln</tt>, for equality with this plane.
+     * Tests another plane, <code>pln</code>, for equality with this plane.
      *
      * @param pln The plane to be tested.  This plane is unchanged.
-     * @return Returns <tt>true</tt> if <tt>pln</tt> is equal to this plane (identical
-     * in all coefficients), and <tt>false</tt> otherwise. NOTE: it is possible that the planes represent the same
+     * @return Returns <code>true</code> if <code>pln</code> is equal to this plane (identical
+     * in all coefficients), and <code>false</code> otherwise. NOTE: it is possible that the planes represent the same
      * physical plane but have unequal coefficients if one or both are not normalized.
      */
     public boolean equals(final Plane3d pln) {
@@ -148,11 +148,11 @@ public class Plane3d {
     //-------------------------------------------------------------------------------------------------------------------------
 
     /**
-     * Tests another object, <tt>obj</tt>, for equality with this plane.
+     * Tests another object, <code>obj</code>, for equality with this plane.
      *
      * @param obj The object to be tested.  This object is unchanged.
-     * @return Returns <tt>true</tt> if <tt>obj</tt> is both a <tt>Plane3d</tt> and is equal to this plane (identical
-     * in all coefficients), and <tt>false</tt> otherwise. NOTE: it is possible that the planes represent the same
+     * @return Returns <code>true</code> if <code>obj</code> is both a <code>Plane3d</code> and is equal to this plane (identical
+     * in all coefficients), and <code>false</code> otherwise. NOTE: it is possible that the planes represent the same
      * physical plane but have unequal coefficients if one or both are not normalized.
      */
     public boolean equals(final Object obj) {

@@ -8,8 +8,8 @@ import java.util.StringTokenizer;
 
 /**
  * A class representing a
- * transformation (Xfm) in 3D of double precision (the components are represented by <tt>double</tt> values),
- * hence the name <tt>Xfm4x4d</tt>.
+ * transformation (Xfm) in 3D of double precision (the components are represented by <code>double</code> values),
+ * hence the name <code>Xfm4x4d</code>.
  * <p>
  * This class implements the basic functionality for a 3D transformation required for robotics use.
  * <p>
@@ -20,8 +20,8 @@ import java.util.StringTokenizer;
  *     | xfm[2][0] xfm[2][1] xfm[2][2] xfm[2][3] | | Z |   | Zt |
  *     [ xfm[3][0] xfm[3][1] xfm[3][2] xfm[3][3] ] [ H ]   [ Ht ]
  * </pre>
- * Where <tt>[X,Y,Z,H]</tt> is the un-transformed point or vector and <tt>[Xt,Yt,Zt,Ht]</tt> is the transformed point or
- * vector.  Normally, <tt>H = 1</tt> for a point transformation and <tt>H = 0</tt> for a vector transformation.
+ * Where <code>[X,Y,Z,H]</code> is the un-transformed point or vector and <code>[Xt,Yt,Zt,Ht]</code> is the transformed point or
+ * vector.  Normally, <code>H = 1</code> for a point transformation and <code>H = 0</code> for a vector transformation.
  */
 
 public class Xfm4x4d {
@@ -34,14 +34,14 @@ public class Xfm4x4d {
     private double[][] xfm = new double[4][4];
 
     /**
-     * Creates a new instance of <tt>Xfm4x4d</tt> that is initialized to an identity.
+     * Creates a new instance of <code>Xfm4x4d</code> that is initialized to an identity.
      */
     public Xfm4x4d() {
         this.identity();
     }
 
     /**
-     * Creates a new instance of <tt>Xfm4x4d</tt> that is initialized to another transform.
+     * Creates a new instance of <code>Xfm4x4d</code> that is initialized to another transform.
      *
      * @param xfmInit The trans formation this transformation should be set equal to.
      */
@@ -55,7 +55,7 @@ public class Xfm4x4d {
      * that each of the 16 terms in the transformation is set equal.
      *
      * @param xfmInit The transformation to set this transformation equal to.
-     * @return Returns this transformation after it have been set equal to <tt>xfmInit</tt>.
+     * @return Returns this transformation after it have been set equal to <code>xfmInit</code>.
      */
     public Xfm4x4d setValue(final Xfm4x4d xfmInit) {
         for (int row = 0; row < 4; row++) {
@@ -500,7 +500,7 @@ public class Xfm4x4d {
      *
      * @param matrix0  (modified) The matrix being decomposed.
      * @param row_perm (modified) The row permutation array (where the original rows moved)
-     * @return <tt>true</tt> if the decomposition was successful, false otherwise.
+     * @return <code>true</code> if the decomposition was successful, false otherwise.
      */
     //
     // Reference: Press, Flannery, Teukolsky, Vetterling,
@@ -732,7 +732,7 @@ public class Xfm4x4d {
      * Invert this transformation into the supplied transformation.
      *
      * @param inverse (Xfm4x4d, modified) The transformation that will be set to the inverse.
-     * @return Returns the inverse transformation <tt>inverse</tt>.
+     * @return Returns the inverse transformation <code>inverse</code>.
      */
     public @NotNull Xfm4x4d invert(@NotNull Xfm4x4d inverse) {
         inverse.invertGeneral(this);
@@ -745,7 +745,7 @@ public class Xfm4x4d {
      * object.  This often happens during interactive environment editing.
      *
      * @param xfm The transformation which will be pre-multiplied with this transformation.
-     * @return Returns this transformation after pre-multiplication with <tt>xfm</tt>
+     * @return Returns this transformation after pre-multiplication with <code>xfm</code>
      */
     public Xfm4x4d preMul(final Xfm4x4d xfm) {
         final Xfm4x4d xfmTmp = new Xfm4x4d(this);
@@ -795,7 +795,7 @@ public class Xfm4x4d {
      * Transform a point in place.
      *
      * @param pt (Point3d, modified) The point to be transformed by this transformation.
-     * @return Returns this transformed point <tt>pt</tt>.
+     * @return Returns this transformed point <code>pt</code>.
      */
     public Point3d transform(final Point3d pt) {
         return transform(pt, pt);
@@ -806,7 +806,7 @@ public class Xfm4x4d {
      *
      * @param pt    (Point3d, readonly) The point to be transformed.
      * @param xfmPt (Point3d, modified) The point to receive the transformed point (the target point).
-     * @return Returns the transformed point, <tt>xfmPt</tt>.
+     * @return Returns the transformed point, <code>xfmPt</code>.
      */
     public Point3d transform(final Point3d pt, final Point3d xfmPt) {
         return xfmPt.setValue(
@@ -819,7 +819,7 @@ public class Xfm4x4d {
      * Transform an array of points in place.
      *
      * @param pts (Point3d[], modified) The array of points to be transformed.
-     * @return Returns the transformed point array <tt>pts</tt>.
+     * @return Returns the transformed point array <code>pts</code>.
      */
     public Point3d[] transform(final Point3d[] pts) {
         for (int iPt = pts.length; --iPt >= 0; ) {
@@ -833,7 +833,7 @@ public class Xfm4x4d {
      * Transform a vector in place.
      *
      * @param v (Vector3d, modified) The vector to be transformed by this transformation.
-     * @return Returns the transformed vector <tt>v</tt>.
+     * @return Returns the transformed vector <code>v</code>.
      */
     public Vector3d transform(final Vector3d v) {
         return transform(v, v);
@@ -844,7 +844,7 @@ public class Xfm4x4d {
      *
      * @param v    (Vector3d, readonly) The vector to be transformed.
      * @param xfmV (Vector3d, modified) The vector to receive the transformed vector (the target vector).
-     * @return Returns the transformed vector, <tt>xfmV</tt>.
+     * @return Returns the transformed vector, <code>xfmV</code>.
      */
     public Vector3d transform(final Vector3d v, final Vector3d xfmV) {
         return xfmV.setValue(
@@ -858,7 +858,7 @@ public class Xfm4x4d {
      *
      * @param vs    (Vector3d[], readonly) An array of vectors to be transformed.
      * @param xfmVs (Vector3d[], modified) An array of vectors to receive the transformed vectors.
-     * @return Returns the transformed vector array, <tt>xfmVs</tt>.
+     * @return Returns the transformed vector array, <code>xfmVs</code>.
      */
     public Vector3d[] transform(final Vector3d[] vs, final Vector3d[] xfmVs) {
         for (int iV = vs.length; --iV >= 0; ) {
