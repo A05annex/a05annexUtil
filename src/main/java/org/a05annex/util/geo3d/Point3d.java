@@ -1,6 +1,6 @@
 package org.a05annex.util.geo3d;
 
-public class Point3d {
+public class Point3d implements Cloneable {
     /**
      * The X coordinate of the point.
      */
@@ -15,13 +15,13 @@ public class Point3d {
     double z;
 
     /**
-     * Creates a new instance of <code>Point3f</code> initialized to the origin.
+     * Creates a new instance of <code>Point3d</code> initialized to the origin.
      */
     public Point3d() {
     }
 
     /**
-     * Creates a new instance of <code>Point3f</code> initialized to a specified location.
+     * Creates a new instance of <code>Point3d</code> initialized to a specified location.
      *
      * @param x The X coordinate of the point.
      * @param y The Y coordinate of the point.
@@ -32,7 +32,7 @@ public class Point3d {
     }
 
     /**
-     * Creates a new instance of <code>Point3f</code> initialized to a specified location.
+     * Creates a new instance of <code>Point3d</code> initialized to a specified location.
      *
      * @param ptInit The location of the instantiated point.
      */
@@ -182,7 +182,7 @@ public class Point3d {
      */
     @Override
     public Object clone() {
-        return clonePoint3f();
+        return clonePoint3d();
     }
 
     /**
@@ -190,7 +190,7 @@ public class Point3d {
      *
      * @return Returns a clone of the point.
      */
-    public Point3d clonePoint3f() {
+    public Point3d clonePoint3d() {
         return new Point3d(x, y, z);
     }
 

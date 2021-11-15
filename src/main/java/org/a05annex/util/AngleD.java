@@ -4,7 +4,7 @@ package org.a05annex.util;
  * This is a wrapper class for an angle. We are using radians as the default unit for angles, so the internal
  * representation is in radians at double precision.
  */
-public class AngleD {
+public class AngleD implements Cloneable {
     /**
      * The degrees type.  Used to indicate the angle is specified in degrees when a type is specified.
      */

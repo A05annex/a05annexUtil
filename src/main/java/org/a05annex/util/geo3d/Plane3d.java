@@ -1,6 +1,6 @@
 package org.a05annex.util.geo3d;
 
-public class Plane3d {
+public class Plane3d implements Cloneable {
     /**
      * The <b>A</b> coefficient of the plane equation.
      */
@@ -114,6 +114,29 @@ public class Plane3d {
 
     //-------------------------------------------------------------------------------------------------------------------------
 
+    /** Get the perpendicular distance from a plane to a point
+     *
+     * @param pt The point to test.
+     * @return The distance from the point to the plane.
+     */
+    public double distance(Point3d pt) {
+        return (A * pt.x) + (B * pt.y) + (C * pt.z) + D;
+    }
+    //-------------------------------------------------------------------------------------------------------------------------
+
+    /** Test whether a point is inside (behind) or outside (in front of or in the direction of the normal)
+     *  of the plane
+     *
+     * @param pt The point to test.
+     * @return <code>true</code> if the point is inside, <code>false</code> if the point
+     * is on or outside the plane.
+     */
+    public boolean isInside(Point3d pt) {
+        return distance(pt) < 0.0;
+    }
+
+    //-------------------------------------------------------------------------------------------------------------------------
+
     /**
      * Gets the normal of the vector,<b>A</b>,<b>B</b>,<b>C</b>.  The normal will be a unit vector only if the plane
      * is normalized.
@@ -168,7 +191,7 @@ public class Plane3d {
     /**
      * Clone this plane.
      *
-     * @return Returns a clone of the plane.  The clone is NOT obtained from the object cache.
+     * @return Returns a clone of the plane.
      */
     public Object clone() {
         return clonePlane3d();
@@ -179,7 +202,7 @@ public class Plane3d {
     /**
      * Clone this plane.
      *
-     * @return Returns a clone of the plane.  The clone is NOT obtained from the object cache.
+     * @return Returns a clone of the plane.
      */
     public Plane3d clonePlane3d() {
         return new Plane3d(A, B, C, D);

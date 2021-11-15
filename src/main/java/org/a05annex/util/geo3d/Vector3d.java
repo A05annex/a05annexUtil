@@ -1,6 +1,6 @@
 package org.a05annex.util.geo3d;
 
-public class Vector3d {
+public class Vector3d  implements Cloneable {
     /**
      * The I component of the vector.
      */
@@ -15,14 +15,14 @@ public class Vector3d {
     double k;
 
     /**
-     * Creates a new instance of <code>Vector3f</code>.  This uses the default
+     * Creates a new instance of <code>Vector3d</code>.  This uses the default
      * initialization of the fields setting the vector to 0,0,0.
      */
     public Vector3d() {
     }
 
     /**
-     * Creates a new instance of <code>Vector3f</code> with the I, J, and K components
+     * Creates a new instance of <code>Vector3d</code> with the I, J, and K components
      * set as specified.  No normalization is performed, the values are set exactly as
      * specified.
      *
@@ -35,7 +35,7 @@ public class Vector3d {
     }
 
     /**
-     * Creates a new instance of <code>Vector3f</code> set equal to another vector.
+     * Creates a new instance of <code>Vector3d</code> set equal to another vector.
      *
      * @param v The vector to make this new vector equal to.
      */
@@ -45,7 +45,7 @@ public class Vector3d {
     }
 
     /**
-     * Creates a new instance of <code>Vector3f</code> initialized to be a vector from <code>ptOrg</code> to
+     * Creates a new instance of <code>Vector3d</code> initialized to be a vector from <code>ptOrg</code> to
      * <code>ptThru</code>.  This length of this vector is equal to the distance from <code>ptOrg</code> to
      * <code>ptThru</code>.  The vector should be normalized if you need a direction vector.
      *
@@ -135,7 +135,8 @@ public class Vector3d {
     }
 
     /**
-     * Gets the dot product between this vector and another vector, <code>v</code>.
+     * Gets the dot product between this vector and another vector, <code>v</code>. The dot
+     * product is the cosine of the angle between the two vectors.
      *
      * @param v The vector against which we take the dot product.  The value of this vector is unchanged.
      * @return Returns the dot product between this vector and vector <code>v</code>.
@@ -177,7 +178,7 @@ public class Vector3d {
      * the coordinate system being used.
      *
      * @param v The vector to be crossed with this vector.  The value of this vector is unchanged.
-     * @return Returns this vector after vector <code>v</code> has been subtracted.
+     * @return Returns this vector after the cross product with vector <code>v</code> has been computed.
      */
     public Vector3d cross(final Vector3d v) {
         setValue((j * v.k) - (k * v.j),
@@ -242,7 +243,7 @@ public class Vector3d {
      * Tests another object, <code>obj</code>, for equality with this vector.
      *
      * @param obj The object to be tested.  This object is unchanged.
-     * @return Returns <code>true</code> if <code>obj</code> is equal to this vector (also a <code>Vector3f</code> and
+     * @return Returns <code>true</code> if <code>obj</code> is equal to this vector (also a <code>Vector3d</code> and
      * identical in all components), and <code>false</code> otherwise.
      */
     public boolean equals(final Object obj) {
@@ -259,7 +260,7 @@ public class Vector3d {
      * @return Returns a clone of the vector.
      */
     public Object clone() {
-        return cloneVector3f();
+        return cloneVector3d();
     }
 
     /**
@@ -267,7 +268,7 @@ public class Vector3d {
      *
      * @return Returns a clone of this vector.
      */
-    public Vector3d cloneVector3f() {
+    public Vector3d cloneVector3d() {
         return new Vector3d(i, j, k);
     }
 }

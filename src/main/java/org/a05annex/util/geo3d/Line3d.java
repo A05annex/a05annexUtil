@@ -1,6 +1,6 @@
 package org.a05annex.util.geo3d;
 
-public class Line3d {
+public class Line3d  implements Cloneable {
     //------------------------------------------------------------------------------------------------------------------
     /**
      * The starting point of the line.
@@ -126,15 +126,28 @@ public class Line3d {
      * Get the point at some parametric distance along the line.  If the line is normalized (i.e. the direction vector
      * is normalized) the parametric distance is equal to the geometric distance from the origin of the line.
      *
+     * @param dDist The parametric distance along the line.
+     * @return Returns the <code>Point3d</code> along the line at the requested distance.
+     */
+    public Point3d pointAtDistance(final double dDist) {
+        return pointAtDistance(new Point3d(), dDist);
+    }
+
+    //------------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Get the point at some parametric distance along the line.  If the line is normalized (i.e. the direction vector
+     * is normalized) the parametric distance is equal to the geometric distance from the origin of the line.
+     *
      * @param pt    The point at the parametric distance.  This point is passed in so that the caller can decide
      *              whether this point is instantiated, or part of the description of some other object.
-     * @param fDist The parametric distance along the line.
+     * @param dDist The parametric distance along the line.
      * @return Returns <code>pt</code>.
      */
-    public Point3d pointAtDistance(final Point3d pt, final float fDist) {
-        pt.x = origin.x + (fDist * direction.i);
-        pt.y = origin.y + (fDist * direction.j);
-        pt.z = origin.z + (fDist * direction.k);
+    public Point3d pointAtDistance(final Point3d pt, final double dDist) {
+        pt.x = origin.x + (dDist * direction.i);
+        pt.y = origin.y + (dDist * direction.j);
+        pt.z = origin.z + (dDist * direction.k);
         return pt;
     }
 
@@ -179,7 +192,7 @@ public class Line3d {
      */
     @Override
     public Object clone() throws CloneNotSupportedException {
-        return super.clone();
+        return cloneLine3d();
     }
 
     //------------------------------------------------------------------------------------------------------------------

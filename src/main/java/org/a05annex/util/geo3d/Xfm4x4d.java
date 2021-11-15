@@ -187,7 +187,7 @@ public class Xfm4x4d {
      * @return Returns this transform after it has been premultiplied by a scaling transformation.
      */
     public Xfm4x4d scale(final double sx, final double sy, final double sz) {
-        return preMul(sx, 0.0, 0.0,0.0, sy, 0.f, 0.0, 0.0, sz);
+        return preMul(sx, 0.0, 0.0, 0.0, sy, 0.f, 0.0, 0.0, sz);
     }
 
     /**
@@ -459,8 +459,8 @@ public class Xfm4x4d {
         // for double 4x4 matrices.
 
         // Copy source matrix to t1tmp
-        for (k=0, i=0; i < 4; i++) {
-            for(j=0; j< 4; j++) {
+        for (k = 0, i = 0; i < 4; i++) {
+            for (j = 0; j < 4; j++) {
                 temp[k++] = xfm.xfm[i][j];
             }
         }
@@ -478,8 +478,8 @@ public class Xfm4x4d {
         result[15] = 1.0;
         luBackSubstitution(temp, row_perm, result);
 
-        for (k=0, i=0; i < 4; i++) {
-            for(j=0; j< 4; j++) {
+        for (k = 0, i = 0; i < 4; i++) {
+            for (j = 0; j < 4; j++) {
                 this.xfm[i][j] = result[k++];
             }
         }
@@ -723,7 +723,8 @@ public class Xfm4x4d {
      *
      * @return Returns this transformation.
      */
-    public @NotNull Xfm4x4d invert() {
+    @NotNull
+    public Xfm4x4d invert() {
         invertGeneral(this);
         return this;
     }
@@ -734,7 +735,8 @@ public class Xfm4x4d {
      * @param inverse (Xfm4x4d, modified) The transformation that will be set to the inverse.
      * @return Returns the inverse transformation <code>inverse</code>.
      */
-    public @NotNull Xfm4x4d invert(@NotNull Xfm4x4d inverse) {
+    @NotNull
+    public Xfm4x4d invert(@NotNull Xfm4x4d inverse) {
         inverse.invertGeneral(this);
         return inverse;
     }
@@ -747,6 +749,7 @@ public class Xfm4x4d {
      * @param xfm The transformation which will be pre-multiplied with this transformation.
      * @return Returns this transformation after pre-multiplication with <code>xfm</code>
      */
+    @NotNull
     public Xfm4x4d preMul(final Xfm4x4d xfm) {
         final Xfm4x4d xfmTmp = new Xfm4x4d(this);
         for (int row = 0; row < 4; row++) {
@@ -772,6 +775,7 @@ public class Xfm4x4d {
      * @param srs22
      * @return
      */
+    @NotNull
     private Xfm4x4d preMul(final double srs00, final double srs01, final double srs02,
                            final double srs10, final double srs11, final double srs12,
                            final double srs20, final double srs21, final double srs22) {
@@ -797,7 +801,8 @@ public class Xfm4x4d {
      * @param pt (Point3d, modified) The point to be transformed by this transformation.
      * @return Returns this transformed point <code>pt</code>.
      */
-    public Point3d transform(final Point3d pt) {
+    @NotNull
+    public Point3d transform(@NotNull final Point3d pt) {
         return transform(pt, pt);
     }
 
@@ -808,7 +813,8 @@ public class Xfm4x4d {
      * @param xfmPt (Point3d, modified) The point to receive the transformed point (the target point).
      * @return Returns the transformed point, <code>xfmPt</code>.
      */
-    public Point3d transform(final Point3d pt, final Point3d xfmPt) {
+    @NotNull
+    public Point3d transform(@NotNull final Point3d pt, @NotNull final Point3d xfmPt) {
         return xfmPt.setValue(
                 (xfm[0][0] * pt.x) + (xfm[0][1] * pt.y) + (xfm[0][2] * pt.z) + xfm[0][3],
                 (xfm[1][0] * pt.x) + (xfm[1][1] * pt.y) + (xfm[1][2] * pt.z) + xfm[1][3],
@@ -821,7 +827,8 @@ public class Xfm4x4d {
      * @param pts (Point3d[], modified) The array of points to be transformed.
      * @return Returns the transformed point array <code>pts</code>.
      */
-    public Point3d[] transform(final Point3d[] pts) {
+    @NotNull
+    public Point3d[] transform(@NotNull final Point3d[] pts) {
         for (int iPt = pts.length; --iPt >= 0; ) {
             final Point3d pt = pts[iPt];
             transform(pt, pt);
@@ -830,12 +837,28 @@ public class Xfm4x4d {
     }
 
     /**
-     * Transform a vector in place.
+     * Clone and Transform an array of points.
      *
-     * @param v (Vector3d, modified) The vector to be transformed by this transformation.
-     * @return Returns the transformed vector <code>v</code>.
+     * @param pts (Point3d[], readonly) The array of points to be cloned and transformed.
+     * @return Returns the cloned and transformed point array.
      */
-    public Vector3d transform(final Vector3d v) {
+    @NotNull
+    public Point3d[] cloneAndTransform(@NotNull final Point3d[] pts) {
+        Point3d[] xfmPts = new Point3d[pts.length];
+        for (int iPt = pts.length; --iPt >= 0; ) {
+            xfmPts[iPt] = transform(pts[iPt], new Point3d());
+        }
+        return xfmPts;
+    }
+
+    /**
+      * Transform a vector in place.
+      *
+      * @param v (Vector3d, modified) The vector to be transformed by this transformation.
+      * @return Returns the transformed vector <code>v</code>.
+      */
+    @NotNull
+    public Vector3d transform(@NotNull final Vector3d v) {
         return transform(v, v);
     }
 
@@ -846,7 +869,8 @@ public class Xfm4x4d {
      * @param xfmV (Vector3d, modified) The vector to receive the transformed vector (the target vector).
      * @return Returns the transformed vector, <code>xfmV</code>.
      */
-    public Vector3d transform(final Vector3d v, final Vector3d xfmV) {
+    @NotNull
+    public Vector3d transform(@NotNull final Vector3d v, @NotNull final Vector3d xfmV) {
         return xfmV.setValue(
                 (xfm[0][0] * v.i) + (xfm[0][1] * v.j) + (xfm[0][2] * v.k),
                 (xfm[1][0] * v.i) + (xfm[1][1] * v.j) + (xfm[1][2] * v.k),
@@ -860,9 +884,25 @@ public class Xfm4x4d {
      * @param xfmVs (Vector3d[], modified) An array of vectors to receive the transformed vectors.
      * @return Returns the transformed vector array, <code>xfmVs</code>.
      */
-    public Vector3d[] transform(final Vector3d[] vs, final Vector3d[] xfmVs) {
+    @NotNull
+    public Vector3d[] transform(@NotNull final Vector3d[] vs, @NotNull final Vector3d[] xfmVs) {
         for (int iV = vs.length; --iV >= 0; ) {
             transform(vs[iV], xfmVs[iV]);
+        }
+        return xfmVs;
+    }
+
+    /**
+     * Clone and transform an array of vectors.
+     *
+     * @param vs    (Vector3d, readonly) The array of vectors to be cloned and transformed.
+     * @return Returns the cloned and transformed vector array.
+     */
+    @NotNull
+    public Vector3d[] cloneAndTransform(@NotNull final Vector3d[] vs) {
+        Vector3d[] xfmVs = new Vector3d[vs.length];
+        for (int iV = vs.length; --iV >= 0; ) {
+            xfmVs[iV] = transform(vs[iV], new Vector3d());
         }
         return xfmVs;
     }
