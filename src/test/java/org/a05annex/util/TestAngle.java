@@ -167,8 +167,8 @@ public class TestAngle {
 
     /**
      * Tests the arc trig functions for initializing the value of the angle. Specifically this
-     * tests the {@link AngleD#mult(double)}, {@link AngleD#mult(double)}, {@link AngleD#mult(double)},
-     * and {@link AngleD#mult(double)} methods
+     * tests the {@link AngleD#atan(double)}, {@link AngleD#atan2(double,double)},
+     * {@link AngleD#asin(double)}, and {@link AngleD#acos(double)} methods
      */
     @Test
     @DisplayName("test AngleD ATrig")
@@ -178,10 +178,41 @@ public class TestAngle {
         assertEquals( PI_OVER_4, new AngleD().atan2(5.0, 5.0));
         assertEquals( new AngleD(AngleUnit.RADIANS,0.0), new AngleD().atan2(0.0, 12.0));
         assertEquals( AngleD.PI_OVER_2, new AngleD().atan2(3.0, 0.0));
-//        assertEquals( new AngleD(AngleD.PI).divide(2.0),AngleD.PI_OVER_2);
-//        assertEquals( new AngleD(AngleD.PI).add(AngleD.PI),AngleD.TWO_PI);
-//        assertEquals( new AngleD(AngleD.TWO_PI).subtract(AngleD.PI),AngleD.PI);
+        assertEquals( AngleD.PI, new AngleD().atan2(0.0, -12.0));
+
+        assertEquals( new AngleD(AngleUnit.RADIANS,0.0), new AngleD().asin(0.0));
+        assertEquals( AngleD.PI_OVER_2, new AngleD().asin(1.0));
+
+        assertEquals( new AngleD(AngleUnit.RADIANS,0.0), new AngleD().acos(1.0));
+        assertEquals( AngleD.PI_OVER_2, new AngleD().acos(0.0));
     }
 
+    /**
+     * Tests setters for the angle. Specifically this
+     * tests the {@link AngleD#setDegrees(double)}, {@link AngleD#mult(double)}, {@link AngleD#mult(double)},
+     * and {@link AngleD#mult(double)} methods
+     */
+    @Test
+    @DisplayName("test AngleD setters")
+    void testSetters() {
+        assertEquals( 0.0, new AngleD().setValue(AngleUnit.RADIANS, 0.0).getRadians());
+        assertEquals( 0.0, new AngleD().setValue(AngleUnit.DEGREES, 0.0).getDegrees());
+        assertEquals( 0.0, new AngleD().setValue(AngleUnit.DEGREES, 0.0).getRadians());
+        assertEquals( 0.0, new AngleD().setValue(AngleUnit.RADIANS, 0.0).getDegrees());
+        assertEquals( 0.0, new AngleD().setRadians(0.0).getRadians());
+        assertEquals( 0.0, new AngleD().setDegrees(0.0).getDegrees());
+        assertEquals( 0.0, new AngleD().setDegrees(0.0).getRadians());
+        assertEquals( 0.0, new AngleD().setRadians(0.0).getDegrees());
+
+        assertEquals( Math.PI, new AngleD().setValue(AngleUnit.RADIANS, Math.PI).getRadians());
+        assertEquals( 180.0, new AngleD().setValue(AngleUnit.DEGREES, 180.0).getDegrees());
+        assertEquals( Math.PI, new AngleD().setValue(AngleUnit.DEGREES, 180.0).getRadians());
+        assertEquals( 180.0, new AngleD().setValue(AngleUnit.RADIANS, Math.PI).getDegrees());
+        assertEquals( Math.PI, new AngleD().setRadians(Math.PI).getRadians());
+        assertEquals( 180.0, new AngleD().setDegrees(180.0).getDegrees());
+        assertEquals( Math.PI, new AngleD().setDegrees(180.0).getRadians());
+        assertEquals( 180.0, new AngleD().setRadians(Math.PI).getDegrees());
+
+    }
 
 }
