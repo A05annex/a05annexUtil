@@ -1,6 +1,7 @@
 package org.a05annex.util.geo3d;
 
 import org.a05annex.util.AngleD;
+import org.a05annex.util.AngleUnit;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
@@ -57,7 +58,7 @@ public class TestXfm4x4d {
     @Test
     @DisplayName("test X rotation")
     void testRotateX() {
-        Xfm4x4d xfm = new Xfm4x4d().rotate(Xfm4x4d.AXIS_X, new AngleD(AngleD.DEGREES,45.0));
+        Xfm4x4d xfm = new Xfm4x4d().rotate(Xfm4x4d.AXIS_X, new AngleD(AngleUnit.DEGREES,45.0));
         _testUnitVectors(xfm);
         _testInverse(xfm);
     }
@@ -65,7 +66,7 @@ public class TestXfm4x4d {
     @Test
     @DisplayName("test Y rotation")
     void testRotateY() {
-        Xfm4x4d xfm = new Xfm4x4d().rotate(Xfm4x4d.AXIS_Y, new AngleD(AngleD.DEGREES,45.0));
+        Xfm4x4d xfm = new Xfm4x4d().rotate(Xfm4x4d.AXIS_Y, new AngleD(AngleUnit.DEGREES,45.0));
         _testUnitVectors(xfm);
         _testInverse(xfm);
     }
@@ -73,7 +74,7 @@ public class TestXfm4x4d {
     @Test
     @DisplayName("test Z rotation")
     void testRotateZ() {
-        Xfm4x4d xfm = new Xfm4x4d().rotate(Xfm4x4d.AXIS_Z, new AngleD(AngleD.DEGREES,45.0));
+        Xfm4x4d xfm = new Xfm4x4d().rotate(Xfm4x4d.AXIS_Z, new AngleD(AngleUnit.DEGREES,45.0));
         _testUnitVectors(xfm);
         _testInverse(xfm);
     }

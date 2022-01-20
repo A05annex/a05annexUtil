@@ -1,6 +1,7 @@
 package org.a05annex.util.geo3d;
 
 import org.a05annex.util.AngleD;
+import org.a05annex.util.AngleUnit;
 import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Element;
 
@@ -70,7 +71,7 @@ public class Xfm4x4d {
         final Vector3d vTmp = new Vector3d(ptAimedAt.x - ptOrigin.x, ptAimedAt.y - ptOrigin.y, ptAimedAt.z - ptOrigin.z).normalize();
         final AngleD aAzimuth = new AngleD().atan2(-vTmp.i, -vTmp.j);
         final AngleD aAltitude = new AngleD().asin(-vTmp.k);
-        final AngleD aRoll = new AngleD(AngleD.DEGREES, 0.0f);
+        final AngleD aRoll = new AngleD(AngleUnit.DEGREES, 0.0f);
         compose(aAzimuth, aAltitude, aRoll, new Vector3d(ptOrigin.x, ptOrigin.y, ptOrigin.z));
         return this;
     }
