@@ -1,4 +1,4 @@
-* **version:** 0.9.1
+* **version:** 0.9.3
 * **status:** released (first release version: 0.8.5)
 * **comments:** We have been using this library for robot development since December 2020, and
 believe it is ready for general use.
@@ -31,6 +31,8 @@ used regardless of the FTC/FRC base platform libraries and/or hardware.
   * **`Xfm4x4d`** - a 3d transformation that can be applied to points and vectors.
   * **`ZeroLengthVectorException`** - And exception thrown when a zero-length vector is normalized.
 * **`AngleD`** - a class that maintains angles in radians with convenience methods for degree input/output.
+* **`AngleConstantD`** - a class that maintains constant angles.
+* **`AngleTYpe`** - The angle unit specification..
 * **`JsonSupport`** - a class with helper functions to aid in reading/writing JSON files.
 * **`Utl`** - a class which extends the java `Math` class with variable argument `min()`, `max()`,
   `length()`, and `clip()` functions.
@@ -49,7 +51,7 @@ There are a couple paths for inclusion.
 Simply add it to the dependencies section of your `gradle.build` file as:
 ```
 dependencies {
-    compile 'org.a05annex:a05annexUtil:0.9.1'
+    implementation 'org.a05annex:a05annexUtil:0.9.3'
      .
      .
      .
@@ -64,16 +66,17 @@ The next most simple way to use **a05annexUtil**, following the advice from this
 [chiefdelphi post](https://www.chiefdelphi.com/t/adding-my-teams-library-as-a-vendor-library/339626)
 and advises you:
 * create a `libs` folder in your robot project
-* copy the `a05annxUtil-0.9.1.jar` file from the github 0.9.1 release into that `libs` folder
+* copy the `a05annxUtil-0.9.3.jar` file from the github 0.9.3 release into that `libs` folder
 * in the dependencies section of the `build.gradle` file add the line:  
-  `compile fileTree(dir: 'libs', include: ['*.jar'])`
-* add the `libs/a05annxUtil-0.9.1.jar` to **git** so it is saved as part of your project.
+  `implementation fileTree(dir: 'libs', include: ['*.jar'])`
+* add the `libs/a05annxUtil-0.9.3.jar` to **git** so it is saved as part of your project.
 
 The disadvantage of this method is that you must manually download the library and
 put it in your project, you also need to check for version updates.
 
 ## Release Notes
 
+* version 0.9.3 - ??-Jan-2022 - Robust AngleD and AngleConstantD implementation.
 * version 0.9.1 - 11-Nov-2021 - 3d vector geometry addition.
 * version 0.8.7 - 25-Apr-2021 - Some convenience fixes:
   * KochanekBartelsSpline:

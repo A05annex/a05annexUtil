@@ -7,6 +7,7 @@ package org.a05annex.util;
  */
 public class AngleConstantD {
 
+    public static final AngleConstantD ZERO = new AngleConstantD(AngleUnit.RADIANS, 0.0);
     public static final AngleConstantD PI = new AngleConstantD(AngleUnit.RADIANS, Math.PI);
     public static final AngleConstantD TWO_PI = new AngleConstantD(AngleUnit.RADIANS, 2.0 * Math.PI);
     public static final AngleConstantD PI_OVER_2 = new AngleConstantD(AngleUnit.RADIANS, Math.PI / 2.0);
@@ -14,6 +15,7 @@ public class AngleConstantD {
     public static final AngleConstantD NEG_TWO_PI = new AngleConstantD(AngleUnit.RADIANS, -2.0 * Math.PI);
     public static final AngleConstantD NEG_PI_OVER_2 = new AngleConstantD(AngleUnit.RADIANS, -Math.PI / 2.0);
 
+    public static final AngleConstantD DEG_ZERO = ZERO;
     public static final AngleConstantD DEG_180 = PI;
     public static final AngleConstantD DEG_360 = TWO_PI;
     public static final AngleConstantD DEG_90 = PI_OVER_2;

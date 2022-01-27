@@ -5,31 +5,31 @@ package org.a05annex.util;
  */
 public final class Utl {
 
-    /**
-     * Set to the value of {@link java.lang.Math#PI}, or {@code 180}&deg;, for convenience only - we are
-     * already including all of the constants from this class.
-     */
-    public static final double PI = Math.PI;
-    /**
-     * Set to the value of {@code -}{@link java.lang.Math#PI}, or {@code 180}&deg;, because we use this a
-     * lot in swerve drive code.
-     */
-    public static final double NEG_PI = -Math.PI;
-    /**
-     * Set to the value of {@code (}{@link java.lang.Math#PI}{@code  * 2,0)}, or {@code 360}&deg;, because we use
-     * this a lot in swerve drive code.
-     */
-    public static final double TWO_PI = Math.PI * 2.0;
-    /**
-     * Set to the value of {@code (}{@link java.lang.Math#PI}{@code  * 0.5)}, or {@code 90}&deg;, because we use
-     * this a lot in swerve drive code.
-     */
-    public static final double PI_OVER_2 = Math.PI * 0.5;
-    /**
-     * Set to the value of {@code -(}{@link java.lang.Math#PI}{@code  * 0.5)}, or {@code -90}&deg;, because
-     * we use this a lot in swerve drive code.
-     */
-    public static final double NEG_PI_OVER_2 = -(Math.PI * 0.5);
+//    /**
+//     * Set to the value of {@link java.lang.Math#PI}, or {@code 180}&deg;, for convenience only - we are
+//     * already including all of the constants from this class.
+//     */
+//    public static final double PI = Math.PI;
+//    /**
+//     * Set to the value of {@code -}{@link java.lang.Math#PI}, or {@code 180}&deg;, because we use this a
+//     * lot in swerve drive code.
+//     */
+//    public static final double NEG_PI = -Math.PI;
+//    /**
+//     * Set to the value of {@code (}{@link java.lang.Math#PI}{@code  * 2,0)}, or {@code 360}&deg;, because we use
+//     * this a lot in swerve drive code.
+//     */
+//    public static final double TWO_PI = Math.PI * 2.0;
+//    /**
+//     * Set to the value of {@code (}{@link java.lang.Math#PI}{@code  * 0.5)}, or {@code 90}&deg;, because we use
+//     * this a lot in swerve drive code.
+//     */
+//    public static final double PI_OVER_2 = Math.PI * 0.5;
+//    /**
+//     * Set to the value of {@code -(}{@link java.lang.Math#PI}{@code  * 0.5)}, or {@code -90}&deg;, because
+//     * we use this a lot in swerve drive code.
+//     */
+//    public static final double NEG_PI_OVER_2 = -(Math.PI * 0.5);
 
     /**
      * This class is all static constants and methods, it cannot be instantiated.
