@@ -1,5 +1,9 @@
 package org.a05annex.util.geo2d;
 
+import org.a05annex.util.AngleConstantD;
+import org.a05annex.util.AngleD;
+import org.a05annex.util.AngleUnit;
+import org.a05annex.util.Utl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.simple.JSONArray;
@@ -34,18 +38,32 @@ import static org.a05annex.util.JsonSupport.*;
  * path point iterators (iterating through the path points), or path point followers (generating a series of
  * path points at specified times along the path).
  * <p>
- * <b>Handling Time</b>
+ * <b>Handling Time:</b>
  * <p>
  * Time expansion/compression, as well as specified unequal time intervals between control points are useful
  * in modifying existing paths that generally work well, but could work better:
  * <ul>
- *     <li><b>expansion/compression</b> - The path time in the path definition is, for example, 10 seconds
- *     in duration. The path designer would like to speed it up to 9 or 8 seconds; or slow it down to 11 or 12 seconds.
- *     Instead of designing a new path with new control points, the path designer would like to scale the existing
- *     path to be faster or slower.</li>
- *     <li><b>repositioning control points in time</b> - The path is generally good, but, some control points
- *     should be reached sooner or later than the 1 second default interval. The path designer would like to
- *     reposition those points in time.</li>
+ *      <li><b>expansion/compression</b> - The path time in the path definition is, for example, 10 seconds
+ *      in duration. The path designer would like to speed it up to 9 or 8 seconds; or slow it down to 11 or 12 seconds.
+ *      Instead of designing a new path with new control points, the path designer would like to scale the existing
+ *      path to be faster or slower.</li>
+ *      <li><b>repositioning control points in time</b> - The path is generally good, but, some control points
+ *      should be reached sooner or later than the 1 second default interval. The path designer would like to
+ *      reposition those points in time.</li>
+ * </ul>
+ * <p>
+ * <b>Robot Actions:</b>
+ * <p>
+ * Robot actions: like starting a parallel command (i.e. a command that runs in parallel with path following like
+ * start/stop collector); or stopping to run a serial command (i.e. stop and shoot, then resume the path) need to
+ * be incorporated into the path description. To accommodate that we have added:
+ * <ul>
+ *      <li><b>to control points</b> - the option to
+ *      specify that the robot should stop at the control point, run a command, and then resume the path. Additionally,
+ *      if a stop and run command is specified, an approximate time for the command to run can be specified to aid in
+ *      path planning for a specified duration autonomous period;</li>
+ *      <li><b>path time actions</b> - The specification of actions (commands) that should happen parallel to the
+ *      traversal of the path and be initiates at specific time along the path</li>
  * </ul>
  */
 public class KochanekBartelsSpline {
@@ -64,6 +82,8 @@ public class KochanekBartelsSpline {
     static final String FIELD_dX = "field_dX";
     static final String FIELD_dY = "field_dY";
     static final String FIELD_dHEADING = "field_dHeading";
+    static final String ROBOT_ACTION_COMMAND = "robotActionCommand";
+    static final String ROBOT_ACTION_DURATION = "robotActionDuration";
 
     // -----------------------------------------------------------------------------------------------------------------
     /**
@@ -135,6 +155,91 @@ public class KochanekBartelsSpline {
     private ControlPoint m_last = null;
 
     // -----------------------------------------------------------------------------------------------------------------
+    // Robot actions - either:
+    //  * Stop and perform some action, then resume (for planning purposes, we have an approximate duration)
+    //  * Schedule a command to run in parallel with the path following
+    // -----------------------------------------------------------------------------------------------------------------
+
+    /**
+     *
+     */
+    public enum RobotActionType {
+        /**
+         * This is an action normally associated with a control point where the robot stops, path following
+         * relinquishes the drive subsystem, and a command such as centering on the target and shooting is
+         * performed. Once that command completes, the path follower resumes with time set back by however
+         * long it took the action to complete.
+         */
+        STOP_AND_RUN_COMMAND,
+        /**
+         * This action schedules a command to happen concurrently with path following. Obviously, the
+         * command must not require the drive subsystem, or this will interrupt path following - and will
+         * not happen concurrently with path following.
+         */
+        SCHEDULE_COMMAND
+    }
+
+    /**
+     * This is the specification of a robot action that should be initiated at some point on the path.
+     */
+    public static class RobotAction {
+        /**
+         * The type of action. The robot action type is specified as either:
+         * <ul>
+         *     <li>{@link RobotActionType#STOP_AND_RUN_COMMAND}: stop robot and run a command. Refer
+         *     to the {@link RobotActionType} documentation for details;</li>
+         *     <li>{@link RobotActionType#SCHEDULE_COMMAND}: schedule a command to run concurrently
+         *     with path following. Refer to the {@link RobotActionType} documentation for details.</li>
+         * </ul>
+         */
+        public final RobotActionType actionType;
+        /**
+         * The action class. It is assumed the action is a command in the <code>frc.robot.commands</code> of
+         * a typical wpilib project with a no-argument constructor.
+         */
+        public final String command;
+        /**
+         * An approximate duration for a {@link RobotActionType#STOP_AND_RUN_COMMAND} {@link #command}. This is
+         * used for path planning only. In competition the actual duration of the command may vary widely subject
+         * to the demands of the competition. This field is meaningless for a
+         * {@link RobotActionType#SCHEDULE_COMMAND} and should be set to {@code 0.0}.
+         */
+        public final double approxDuration;
+
+        /**
+         * Instantiate a schedule command action that should be performed in parallel with path following.
+         *
+         * @param command The name of the class (not including path info).
+         */
+        public RobotAction(@NotNull String command) {
+            this.actionType = RobotActionType.SCHEDULE_COMMAND;
+            this.command = command;
+            this.approxDuration = 0.0;
+        }
+
+        /**
+         * Instantiate either:
+         * <ul>
+         *     <li>{@link RobotActionType#STOP_AND_RUN_COMMAND}: stop robot and run a command. Refer
+         *     to the {@link RobotActionType} documentation for details;</li>
+         *     <li>{@link RobotActionType#SCHEDULE_COMMAND}: schedule a command to run concurrently
+         *     with path following. Refer to the {@link RobotActionType} documentation for details.</li>
+         * </ul>
+         *
+         * @param actionType     Either {@link RobotActionType#STOP_AND_RUN_COMMAND} or
+         *                       {@link RobotActionType#SCHEDULE_COMMAND}
+         * @param command        The name of the class (not including path info).
+         * @param approxDuration An approximate duration for the command, used in path planning. Completely
+         *                       ignored when the robot is following a path.
+         */
+        public RobotAction(@NotNull RobotActionType actionType, @NotNull String command, double approxDuration) {
+            this.actionType = actionType;
+            this.command = command;
+            this.approxDuration = (actionType == RobotActionType.SCHEDULE_COMMAND) ? 0.0 : approxDuration;
+        }
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
     // PathPoint - a generated point on the path that includes expected field position and heading as well as
     // forward speed, strafe speed, and rotation speed for the robot.
     // -----------------------------------------------------------------------------------------------------------------
@@ -156,7 +261,7 @@ public class KochanekBartelsSpline {
         /**
          * The field heading for the robot when it reaches this point on the path
          */
-        public final double fieldHeading;
+        public final AngleConstantD fieldHeading;
         /**
          *
          */
@@ -176,31 +281,33 @@ public class KochanekBartelsSpline {
          */
         public final double speedRotation;
 
+        public final RobotAction action;
+
         /**
          * Instantiate a Path Point.
          *
          * @param time                 The time this point on the path occurs.
          * @param fieldX               The expected field X position of the robot in meters.
          * @param fieldY               The expected field Y position of the robot in meters.
-         * @param fieldHeading         The expected heading of the robot in radians.
+         * @param fieldHeading         The expected heading of the robot.
          * @param field_dX             The expected field dX velocity of the robot in meters/sec.
          * @param field_dY             The expected field dY velocity of the robot in meters/sec.
          * @param field_dHeading       The expected dHeading of the robot in radians/sec.
          * @param speedForward         The forward chassis speed of the robot in meters/sec.
          * @param speedStrafe          The strafe chassis velocity of the robot in meters/sec.
          * @param speedRotation        The rotation speed of the robot in radians/sec.
+         * @param action               (Nullable) The action the robot should perform at this path point.
          * @param previousControlPoint (not null) The control point at the start of the curve segment
          *                             containing this path point.
          * @param nextControlPoint     (not null) The control point at the end of the curve segment
          *                             containing this path point.
          */
-        public PathPoint(double time, double fieldX, double fieldY, double fieldHeading,
+        public PathPoint(double time, double fieldX, double fieldY, AngleConstantD fieldHeading,
                          double field_dX, double field_dY, double field_dHeading,
                          double speedForward, double speedStrafe, double speedRotation,
+                         @Nullable RobotAction action,
                          @NotNull ControlPoint previousControlPoint, @NotNull ControlPoint nextControlPoint) {
             this.time = time;
-            this.previousControlPoint = previousControlPoint;
-            this.nextControlPoint = nextControlPoint;
             this.fieldPt = new Point2D.Double(fieldX, fieldY);
             this.fieldHeading = fieldHeading;
             this.field_dX = field_dX;
@@ -209,6 +316,9 @@ public class KochanekBartelsSpline {
             this.speedForward = speedForward;
             this.speedStrafe = speedStrafe;
             this.speedRotation = speedRotation;
+            this.action = action;
+            this.previousControlPoint = previousControlPoint;
+            this.nextControlPoint = nextControlPoint;
         }
 
         /**
@@ -243,14 +353,17 @@ public class KochanekBartelsSpline {
         ControlPoint m_last = null;
         double m_fieldX = 0.0;
         double m_fieldY = 0.0;
-        double m_fieldHeading = 0.0;
+        AngleD m_fieldHeading = new AngleD(AngleD.ZERO);
         double m_time;
-        // Have the location derivatives been edited? If so, then the user has explicitly set the derivatives
-        //  and them must be maintained, otherwise, derivatives are recomputed as control points are moved around.
+        // Have the location derivatives been edited? If so, then the user has explicitly set the derivatives,
+        //  and they must be maintained, otherwise, derivatives are recomputed as control points are moved around.
         boolean m_locationDerivativesEdited = false;
         double m_dX = 0.0;
         double m_dY = 0.0;
         double m_dHeading = 0.0;
+        // This is a robot action to stop at this control point and do something
+        String m_robotAction = null;
+        double m_actionDuration = 0.0;
         // These are never saved, they are always computed based on the saved tangents and the times of this
         // point and the surrounding points.
         double m_dXin = 0.0;
@@ -278,12 +391,14 @@ public class KochanekBartelsSpline {
         public ControlPoint(@NotNull JSONObject json) {
             m_fieldX = parseDouble(json, FIELD_X, 0.0);
             m_fieldY = parseDouble(json, FIELD_Y, 0.0);
-            m_fieldHeading = parseDouble(json, FIELD_HEADING, 0.0);
+            m_fieldHeading.setValue(AngleUnit.RADIANS, parseDouble(json, FIELD_HEADING, 0.0));
             m_time = parseDouble(json, TIME, 0.0);
             m_locationDerivativesEdited = parseBoolean(json, LOCATION_DERIVATIVES_EDITED, false);
             m_dX = parseDouble(json, FIELD_dX, 0.0);
             m_dY = parseDouble(json, FIELD_dY, 0.0);
             m_dHeading = parseDouble(json, FIELD_dHEADING, 0.0);
+            m_robotAction = parseString(json, ROBOT_ACTION_COMMAND, null);
+            m_actionDuration = parseDouble(json, ROBOT_ACTION_DURATION, 0.0);
         }
 
         /**
@@ -296,12 +411,16 @@ public class KochanekBartelsSpline {
             JSONObject controlPoint = new JSONObject();
             controlPoint.put(FIELD_X, m_fieldX);
             controlPoint.put(FIELD_Y, m_fieldY);
-            controlPoint.put(FIELD_HEADING, m_fieldHeading);
+            controlPoint.put(FIELD_HEADING, m_fieldHeading.getRadians());
             controlPoint.put(TIME, m_time);
             controlPoint.put(LOCATION_DERIVATIVES_EDITED, m_locationDerivativesEdited);
             controlPoint.put(FIELD_dX, m_dX);
             controlPoint.put(FIELD_dY, m_dY);
             controlPoint.put(FIELD_dHEADING, m_dHeading);
+            if (null != m_robotAction) {
+                controlPoint.put(ROBOT_ACTION_COMMAND, m_robotAction);
+                controlPoint.put(ROBOT_ACTION_DURATION, m_actionDuration);
+            }
             return controlPoint;
         }
 
@@ -440,12 +559,20 @@ public class KochanekBartelsSpline {
                         chord.normalize();
                         Vector2d nextVelocityVector = new Vector2d(m_next.m_dX, m_next.m_dY);
                         double nextVelocity = nextVelocityVector.length();
-                        double dot = chord.dot(nextVelocityVector.scale(1.0 / nextVelocity));
-                        Vector2d difference = new Vector2d(nextVelocityVector, chord.scale(dot), Vector2d.VECTOR_SUBTRACT);
-                        Vector2d thisVelocityVector =
-                                new Vector2d(chord, difference, Vector2d.VECTOR_ADD).scale(nextVelocity);
-                        m_dX = thisVelocityVector.getI();
-                        m_dY = thisVelocityVector.getJ();
+                        // so here is an interesting corner case - if  dx and dy are zero (i.e. we stop at the control
+                        // point) then nextVelocity will be zero, so we have a divide by zero. In that case we set the
+                        // derivatives to zero.
+                        if (nextVelocity > Vector2d.ZERO_TOLERANCE) {
+                            double dot = chord.dot(nextVelocityVector.scale(1.0 / nextVelocity));
+                            Vector2d difference = new Vector2d(nextVelocityVector, chord.scale(dot), Vector2d.VECTOR_SUBTRACT);
+                            Vector2d thisVelocityVector =
+                                    new Vector2d(chord, difference, Vector2d.VECTOR_ADD).scale(nextVelocity);
+                            m_dX = thisVelocityVector.getI();
+                            m_dY = thisVelocityVector.getJ();
+                        } else {
+                            m_dX = 0.0;
+                            m_dY = 0.0;
+                        }
                         return;
                     }
                 }
@@ -454,18 +581,23 @@ public class KochanekBartelsSpline {
                     fieldXnext = m_next.m_fieldX;
                     fieldYnext = m_next.m_fieldY;
                 } else if ((m_last != null) && (m_last.m_last != null)) {
-                    // we are going to manufacture a next point from the position of the lastt point
+                    // we are going to manufacture a next point from the position of the last point
                     Vector2d chord = new Vector2d(m_last.m_fieldX, m_last.m_fieldY, m_fieldX, m_fieldY);
                     if (chord.length() > Vector2d.ZERO_TOLERANCE) {
                         chord.normalize();
                         Vector2d lastVelocityVector = new Vector2d(m_last.m_dX, m_last.m_dY);
                         double lastVelocity = lastVelocityVector.length();
-                        double dot = chord.dot(lastVelocityVector.scale(1.0 / lastVelocity));
-                        Vector2d difference = new Vector2d(lastVelocityVector, chord.scale(dot), Vector2d.VECTOR_SUBTRACT);
-                        Vector2d thisVelocityVector =
-                                new Vector2d(chord, difference, Vector2d.VECTOR_ADD).scale(lastVelocity);
-                        m_dX = thisVelocityVector.getI();
-                        m_dY = thisVelocityVector.getJ();
+                        if (lastVelocity > Vector2d.ZERO_TOLERANCE) {
+                            double dot = chord.dot(lastVelocityVector.scale(1.0 / lastVelocity));
+                            Vector2d difference = new Vector2d(lastVelocityVector, chord.scale(dot), Vector2d.VECTOR_SUBTRACT);
+                            Vector2d thisVelocityVector =
+                                    new Vector2d(chord, difference, Vector2d.VECTOR_ADD).scale(lastVelocity);
+                            m_dX = thisVelocityVector.getI();
+                            m_dY = thisVelocityVector.getJ();
+                        } else {
+                            m_dX = 0.0;
+                            m_dY = 0.0;
+                        }
                         return;
                     }
                 }
@@ -546,26 +678,26 @@ public class KochanekBartelsSpline {
             setTangent((fieldX - m_fieldX) / DERIVATIVE_UI_SCALE, (fieldY - m_fieldY) / DERIVATIVE_UI_SCALE);
         }
 
-        public double getFieldHeading() {
+        public AngleD getFieldHeading() {
             return m_fieldHeading;
         }
 
         /**
-         * Get the field X location for the display of af a heading editing handle for this control point.
+         * Get the field X location for the display af a heading editing handle for this control point.
          *
          * @return (not null, double) The field X location for the heading editing handle.
          */
         public double getHeadingX() {
-            return m_fieldX + (ROBOT_HEADING_HANDLE * Math.sin(m_fieldHeading));
+            return m_fieldX + (ROBOT_HEADING_HANDLE * m_fieldHeading.sin());
         }
 
         /**
-         * Get the field Y location for the display of af a heading editing handle for this control point.
+         * Get the field Y location for the display af a heading editing handle for this control point.
          *
          * @return (not null, double) The field Y location for the heading editing handle.
          */
         public double getHeadingY() {
-            return m_fieldY + (ROBOT_HEADING_HANDLE * Math.cos(m_fieldHeading));
+            return m_fieldY + (ROBOT_HEADING_HANDLE * m_fieldHeading.cos());
         }
 
         /**
@@ -581,22 +713,23 @@ public class KochanekBartelsSpline {
             // OK, the simple action here is to look at the current mouse position relative to the control
             // point position, use the atan2, and get a heading. However, tis does not handle the -180/180 degree
             // transition, so we need some logic like the NavX logic. for passing over the boundary
-            setFieldHeading(Math.atan2(pt.getX() - m_fieldX, pt.getY() - m_fieldY));
+            setFieldHeading(new AngleD().atan2(pt.getX() - m_fieldX, pt.getY() - m_fieldY));
         }
 
         /**
          * Set the heading direction for this control point.
          *
-         * @param heading (double) The heading direction, in radians, for this control point.
+         * @param heading (AngleConstantD) The heading direction for this control point.
          */
-        public void setFieldHeading(double heading) {
-            while ((heading - m_fieldHeading) > Math.PI) {
-                heading -= 2.0 * Math.PI;
+        public void setFieldHeading(AngleConstantD heading) {
+            AngleD adjustedHeading = new AngleD(heading);
+            while ((adjustedHeading.getRadians() - m_fieldHeading.getRadians()) > Math.PI) {
+                adjustedHeading.subtract(AngleD.TWO_PI);
             }
-            while ((heading - m_fieldHeading) < -Math.PI) {
-                heading += 2.0 * Math.PI;
+            while ((adjustedHeading.getRadians() - m_fieldHeading.getRadians()) < -Math.PI) {
+                adjustedHeading.add(AngleD.TWO_PI);
             }
-            m_fieldHeading = heading;
+            m_fieldHeading = adjustedHeading;
             // update the derivatives
             updateHeadingDerivative();
             if (m_last != null) {
@@ -618,9 +751,15 @@ public class KochanekBartelsSpline {
                 m_dHeading = 0.0;
             } else {
                 double fieldHeadingPrev = m_last != null ?
-                        m_last.m_fieldHeading : m_fieldHeading - (m_next.m_fieldHeading - m_fieldHeading);
+//                        m_last.m_fieldHeading : m_fieldHeading - (m_next.m_fieldHeading - m_fieldHeading);
+                        m_last.m_fieldHeading.getRadians() :
+                        m_fieldHeading.getRadians() -
+                                (m_next.m_fieldHeading.getRadians() - m_fieldHeading.getRadians());
                 double fieldHeadingNext = m_next != null ?
-                        m_next.m_fieldHeading : m_fieldHeading + (m_fieldHeading - m_last.m_fieldHeading);
+//                        m_next.m_fieldHeading : m_fieldHeading + (m_fieldHeading - m_last.m_fieldHeading);
+                        m_next.m_fieldHeading.getRadians() :
+                        m_fieldHeading.getRadians() +
+                                (m_fieldHeading.getRadians() - m_last.m_fieldHeading.getRadians());
                 m_dHeading = DEFAULT_HEADING_TENSION * (fieldHeadingNext - fieldHeadingPrev);
             }
         }
@@ -640,8 +779,8 @@ public class KochanekBartelsSpline {
          *
          * @param time      The new time, in seconds, for this control point. The time must be greater than the time
          *                  of the last (previous) control point, and less than the time of the next control point.
-         * @param propagate {@code false} of the new time applies only to this point, {@code true} if the
-         *                  amount the time changes should propagate to all control points after this point. For
+         * @param propagate {@code false} if the new time applies only to this point, {@code true} if the
+         *                  time change should propagate to all control points after this point. For
          *                  example, if you had a path with 4 control points at times (0.0, 1.0, 2.0, 3.0) and
          *                  you set the time of the second control point to 1.1: then without propagation only
          *                  the second control point time will be modified as (0.0, 1.1, 2.0, 3.0); with propagation
@@ -669,6 +808,44 @@ public class KochanekBartelsSpline {
             }
         }
 
+        /**
+         * Set (or unset)  a {@link RobotActionType#STOP_AND_RUN_COMMAND} to be executed at this control
+         * point. If the {@code CommandName} is not <code>null</code>. this method sets that action and
+         * sets the sontrol points derivatives to <code>0.0</code> (the robot is stopped) to execute
+         * the command); and if <code>null</code>,restores derivatives to default control and
+         * <code>null</code>'s any actions associated with this control point.
+         *
+         * @param commandName         The name of the action to be performed (a class in the
+         *                            <code>frc.robot.command</code> package with a no-argument constructor).
+         * @param approximateDuration The approximate duration of the command (in seconds) to be used
+         *                            only in path planning applications.
+         */
+        public void setRobotAction(@Nullable String commandName, double approximateDuration) {
+            // apply this action only if something has changed
+            if (null != commandName) {
+                // Here we stop, relinquish drive, and do something, then resume,
+                m_robotAction = commandName;
+                setTangent(0.0, 0.0);    // we are not moving
+                m_actionDuration = approximateDuration;
+            } else if (null != m_robotAction) {
+                // This is releasing the 'stop and run command' constraint, so the derivatives go back the
+                // default computations of the derivatives
+                m_robotAction = null;
+                resetDerivative();
+                m_actionDuration = 0.0;
+            }
+        }
+
+        /**
+         * Get the robot action that should be performed at this control point.
+         *
+         * @return The robot action, or <code>null</code> is no action, other than continuing along the path,
+         * should be performed.
+         */
+        public RobotAction getRobotAction() {
+            return (null == m_robotAction) ? null : new RobotAction(RobotActionType.STOP_AND_RUN_COMMAND,
+                    m_robotAction, m_actionDuration);
+        }
 
         /**
          * Test whether a field position (probably a mouse position during path editing) is over this control
@@ -818,8 +995,8 @@ public class KochanekBartelsSpline {
             m_segment[1][1] = m_thisSegmentEnd.m_fieldY;
             m_segment[2][1] = m_thisSegmentStart.m_dYout;
             m_segment[3][1] = m_thisSegmentEnd.m_dYin;
-            m_segment[0][2] = m_thisSegmentStart.m_fieldHeading;
-            m_segment[1][2] = m_thisSegmentEnd.m_fieldHeading;
+            m_segment[0][2] = m_thisSegmentStart.m_fieldHeading.getRadians();
+            m_segment[1][2] = m_thisSegmentEnd.m_fieldHeading.getRadians();
             m_segment[2][2] = m_thisSegmentStart.m_dHeadingOut;
             m_segment[3][2] = m_thisSegmentEnd.m_dHeadingIn;
         }
@@ -887,9 +1064,10 @@ public class KochanekBartelsSpline {
             double forward = ((dField[0] * sinHeading) + (dField[1] * cosHeading)) * m_speedMultiplier;
             double strafe = ((dField[0] * cosHeading) - (dField[1] * sinHeading)) * m_speedMultiplier;
             // create and return the path point
-            return new PathPoint(time, field[0], field[1], field[2], dField[0], dField[1], dField[2],
+            return new PathPoint(time, field[0], field[1], new AngleD(AngleUnit.RADIANS, field[2]),
+                    dField[0], dField[1], dField[2],
                     forward, strafe, dField[2] * m_speedMultiplier,
-                    m_thisSegmentStart, m_thisSegmentEnd);
+                    null, m_thisSegmentStart, m_thisSegmentEnd);
         }
     }
 
@@ -1052,19 +1230,19 @@ public class KochanekBartelsSpline {
 
     /**
      * Add a control point to the end of the path, which will extend that path to that new control point. This
-     * method defers to {@link #addControlPoint(double, double, double)} with a heading of (@code 0.0}.
+     * method defers to {@link #addControlPoint(double, double, AngleConstantD)} with a heading of (@code 0.0}.
      *
      * @param pt The field location of the new control point.
      * @return Returns the added control point.
      */
     @NotNull
     public ControlPoint addControlPoint(@NotNull Point2D pt) {
-        return addControlPoint(pt.getX(), pt.getY(), 0.0);
+        return addControlPoint(pt.getX(), pt.getY(), AngleD.ZERO);
     }
 
     /**
      * Add a control point to the end of the path, which will extend that path to that new control point. This
-     * method defers to {@link #addControlPoint(double, double, double)} with a heading of 0.0.
+     * method defers to {@link #addControlPoint(double, double, AngleConstantD)} with a heading of 0.0.
      *
      * @param fieldX The X field position for the added control point.
      * @param fieldY The field Y position for the added control point.
@@ -1072,7 +1250,7 @@ public class KochanekBartelsSpline {
      */
     @NotNull
     public ControlPoint addControlPoint(double fieldX, double fieldY) {
-        return addControlPoint(fieldX, fieldY, 0.0);
+        return addControlPoint(fieldX, fieldY, AngleD.ZERO);
     }
 
     /**
@@ -1086,7 +1264,7 @@ public class KochanekBartelsSpline {
      * @return Returns the added control point.
      */
     @NotNull
-    public ControlPoint addControlPoint(double fieldX, double fieldY, double fieldHeading) {
+    public ControlPoint addControlPoint(double fieldX, double fieldY, AngleConstantD fieldHeading) {
         return addControlPoint(fieldX, fieldY, fieldHeading, (null == m_last) ? 0.0 : m_last.m_time + 1.0);
     }
 
@@ -1102,7 +1280,7 @@ public class KochanekBartelsSpline {
      * @return Returns the added control point.
      */
     @NotNull
-    public ControlPoint addControlPoint(double fieldX, double fieldY, double fieldHeading, double time) {
+    public ControlPoint addControlPoint(double fieldX, double fieldY, AngleConstantD fieldHeading, double time) {
         // make the time valid
         if (null == m_last) {
             time = 0.0;
@@ -1121,7 +1299,7 @@ public class KochanekBartelsSpline {
         }
         m_last = newControlPoint;
         newControlPoint.setFieldLocation(fieldX, fieldY);
-        newControlPoint.setFieldHeading(fieldHeading);
+        newControlPoint.setFieldHeading(new AngleD(fieldHeading));
         return newControlPoint;
     }
 
@@ -1283,8 +1461,6 @@ public class KochanekBartelsSpline {
      * successfully loaded, the path will be empty.
      */
     public boolean loadPath(String filename) {
-        // The deal here is that we want to make sure we can read this file as a path before we
-        // the existing path description.
         clearPath();
         try {
             // Load the path from the file.

@@ -76,7 +76,20 @@ put it in your project, you also need to check for version updates.
 
 ## Release Notes
 
-* version 0.9.3 - ??-Jan-2022 - Robust AngleD and AngleConstantD implementation.
+* version 0.9.3 - ??-Jan-2022 - Prep for 2022 Rapid React:
+  * Made AngleD more roust and added AngleConstantD implementation.
+  * KochanekBartelsSpline: bug fixes and robot actions:
+    * Headings are now specified using AngleD
+    * When derivatives for control points adjacent to the start and end control points were
+      set to zero this would generate a divide by zero condition that broke the path between
+      the adjacent point and the start or end point. This has been fixed.
+    * Added robot actions to the path. Actions are Command class names of commands in the
+      <code>frc.robots.commands</code> package. Actions have two types:
+      * A serial action at a control point where path following (and the robot) stops, a command is executed
+        (like aim and shoot - where aims take control of the drive subsystem), and when the command
+        finishes, control returns to the path follower.
+      * A parallel action (like spin up the collector) which can be scheduled anywhere along the path, and may not
+        require the drive subsystem.
 * version 0.9.1 - 11-Nov-2021 - 3d vector geometry addition.
 * version 0.8.7 - 25-Apr-2021 - Some convenience fixes:
   * KochanekBartelsSpline:
