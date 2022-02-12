@@ -39,7 +39,6 @@ public class Vector3d  implements Cloneable {
      *
      * @param v The vector to make this new vector equal to.
      */
-    @SuppressWarnings("CopyConstructorMissesField")
     public Vector3d(final Vector3d v) {
         setValue(v);
     }
@@ -259,7 +258,9 @@ public class Vector3d  implements Cloneable {
      *
      * @return Returns a clone of the vector.
      */
-    public Object clone() {
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        Object o = super.clone();
         return cloneVector3d();
     }
 

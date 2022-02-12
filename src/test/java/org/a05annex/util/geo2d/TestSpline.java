@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 
 @RunWith(JUnitPlatform.class)
@@ -407,13 +406,13 @@ public class TestSpline {
         final KochanekBartelsSpline spline = createLinearTestSpline(controlPoints);
         // there are no robot actions on this path, so asking for an action should return null.
         for (KochanekBartelsSpline.ControlPoint ctrlPt : spline.getControlPoints()) {
-            assertNull(ctrlPt.getRobotAction());;
+            assertNull(ctrlPt.getRobotAction());
         }
         // release the specified tangent on control point 1 so we can get the default derivative for future tests
         controlPoints.get(1).resetDerivative();
         double defaultFreeXDerivative = controlPoints.get(1).getRawTangentX();
 
-        // Add an action to the second control point. VEryfy this resets the robot velocity to zero so
+        // Add an action to the second control point. Verify this resets the robot velocity to zero so
         // derive control can hand aff to the action we re stopping for
         String actionCommand = "TestCommand";
         double approxDuration = 2.0;

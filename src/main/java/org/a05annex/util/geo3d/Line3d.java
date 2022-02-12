@@ -54,7 +54,6 @@ public class Line3d  implements Cloneable {
      *
      * @param lnInit The line this line will be set equal to.
      */
-    @SuppressWarnings("CopyConstructorMissesField")
     public Line3d(final Line3d lnInit) {
         setValue(lnInit);
     }
@@ -192,6 +191,8 @@ public class Line3d  implements Cloneable {
      */
     @Override
     public Object clone() throws CloneNotSupportedException {
+        Object o = super.clone();
+        super.clone();
         return cloneLine3d();
     }
 

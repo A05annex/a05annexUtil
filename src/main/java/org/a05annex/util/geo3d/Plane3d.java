@@ -174,7 +174,8 @@ public class Plane3d implements Cloneable {
      * Tests another object, <code>obj</code>, for equality with this plane.
      *
      * @param obj The object to be tested.  This object is unchanged.
-     * @return Returns <code>true</code> if <code>obj</code> is both a <code>Plane3d</code> and is equal to this plane (identical
+     * @return Returns <code>true</code> if <code>obj</code> is both a <code>Plane3d</code> and
+     * is equal to this plane (identical
      * in all coefficients), and <code>false</code> otherwise. NOTE: it is possible that the planes represent the same
      * physical plane but have unequal coefficients if one or both are not normalized.
      */
@@ -193,7 +194,9 @@ public class Plane3d implements Cloneable {
      *
      * @return Returns a clone of the plane.
      */
-    public Object clone() {
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        Object o = super.clone();
         return clonePlane3d();
     }
 

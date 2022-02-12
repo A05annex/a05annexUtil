@@ -3,9 +3,6 @@ package org.a05annex.util.geo3d;
 import org.a05annex.util.AngleD;
 import org.a05annex.util.AngleUnit;
 import org.jetbrains.annotations.NotNull;
-import org.w3c.dom.Element;
-
-import java.util.StringTokenizer;
 
 /**
  * A class representing a
@@ -32,7 +29,7 @@ public class Xfm4x4d {
     public static final int AXIS_Y = 1;
     public static final int AXIS_Z = 2;
 
-    private double[][] xfm = new double[4][4];
+    private final double[][] xfm = new double[4][4];
 
     /**
      * Creates a new instance of <code>Xfm4x4d</code> that is initialized to an identity.
@@ -46,7 +43,6 @@ public class Xfm4x4d {
      *
      * @param xfmInit The trans formation this transformation should be set equal to.
      */
-    @SuppressWarnings("CopyConstructorMissesField")
     public Xfm4x4d(final Xfm4x4d xfmInit) {
         this.setValue(xfmInit);
     }
@@ -67,7 +63,7 @@ public class Xfm4x4d {
 
     public Xfm4x4d setValue(final Point3d ptOrigin, final Point3d ptAimedAt) throws ZeroLengthVectorException {
         identity();
-        // set temp vector - from the originr to the aimedAt point
+        // set temp vector - from the origin to the aimedAt point
         final Vector3d vTmp = new Vector3d(ptAimedAt.x - ptOrigin.x, ptAimedAt.y - ptOrigin.y, ptAimedAt.z - ptOrigin.z).normalize();
         final AngleD aAzimuth = new AngleD().atan2(-vTmp.i, -vTmp.j);
         final AngleD aAltitude = new AngleD().asin(-vTmp.k);
@@ -193,7 +189,7 @@ public class Xfm4x4d {
 
     /**
      * Premultiply this transformation by a rotation transformation for the specified rotation about the specified axis.
-     * This function is a front for the version of {@link Xfm4x4d#rotate(int, AngleD)} that takes
+     * This function is a front for the version of {@link Xfm4x4d#rotate(int,double,double)} that takes
      * the sin and cosine of the rotation angle as arguments.
      * <p>
      * If you want to set this transformation to be the rotation transformation,

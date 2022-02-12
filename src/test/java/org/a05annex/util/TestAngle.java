@@ -138,18 +138,19 @@ public class TestAngle {
     @DisplayName("test AngleConstantD.equals()")
     void testEquals() {
         assertTrue(new AngleD(AngleUnit.RADIANS, Math.PI).equals(AngleD.PI));
-        assertTrue(new AngleD(AngleUnit.RADIANS, Math.PI).equals((Object) AngleD.PI));
+        assertEquals(new AngleD(AngleUnit.RADIANS, Math.PI), (Object) AngleD.PI);
+        //noinspection EqualsWithItself
         assertTrue(AngleD.PI.equals(AngleD.PI));
         assertTrue(AngleD.PI.equals(new AngleD(AngleUnit.RADIANS, Math.PI)));
-        assertTrue(AngleD.PI.equals((Object) (new AngleD(AngleUnit.RADIANS, Math.PI))));
+        assertEquals(AngleD.PI, (Object) (new AngleD(AngleUnit.RADIANS, Math.PI)));
 
         assertFalse(new AngleD(AngleUnit.RADIANS, Math.PI).equals(AngleD.TWO_PI));
-        assertFalse(new AngleD(AngleUnit.RADIANS, Math.PI).equals((Object) AngleD.TWO_PI));
+        assertNotEquals(new AngleD(AngleUnit.RADIANS, Math.PI), (Object) AngleD.TWO_PI);
         assertFalse(AngleD.PI.equals(AngleD.TWO_PI));
         assertFalse(AngleD.TWO_PI.equals(new AngleD(AngleUnit.RADIANS, Math.PI)));
-        assertFalse(AngleD.TWO_PI.equals((Object) (new AngleD(AngleUnit.RADIANS, Math.PI))));
+        assertNotEquals(AngleD.TWO_PI, (Object) (new AngleD(AngleUnit.RADIANS, Math.PI)));
 
-        assertFalse(AngleD.TWO_PI.equals((Object) ("not an angle")));
+        assertNotEquals(AngleD.TWO_PI, (Object) ("not an angle"));
 
     }
     // -----------------------------------------------------------------------------------------------------------------

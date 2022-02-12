@@ -77,13 +77,13 @@ public class JsonSupport {
     /**
      * Parse a {@link Point2D} from a JSON list.
      *
-     * @param coordList The JSON list containing the [X,Y] coordinates of the point.
+     * @param coordinateList The JSON list containing the [X,Y] coordinates of the point.
      * @return The parsed {@link Point2D}.
      * @throws ClassCastException The value in the list is not a {@code Point2d}.
      */
     @NotNull
-    static public Point2D parsePoint(@NotNull JSONArray coordList) {
-        return new Point2D.Double((double) coordList.get(0), (double) coordList.get(1));
+    static public Point2D parsePoint(@NotNull JSONArray coordinateList) {
+        return new Point2D.Double((double) coordinateList.get(0), (double) coordinateList.get(1));
     }
 
     /**

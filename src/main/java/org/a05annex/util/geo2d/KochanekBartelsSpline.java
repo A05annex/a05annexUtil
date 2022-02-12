@@ -3,7 +3,6 @@ package org.a05annex.util.geo2d;
 import org.a05annex.util.AngleConstantD;
 import org.a05annex.util.AngleD;
 import org.a05annex.util.AngleUnit;
-import org.a05annex.util.Utl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.simple.JSONArray;
@@ -811,7 +810,7 @@ public class KochanekBartelsSpline {
         /**
          * Set (or unset)  a {@link RobotActionType#STOP_AND_RUN_COMMAND} to be executed at this control
          * point. If the {@code CommandName} is not <code>null</code>. this method sets that action and
-         * sets the sontrol points derivatives to <code>0.0</code> (the robot is stopped) to execute
+         * sets the control points derivatives to <code>0.0</code> (the robot is stopped) to execute
          * the command); and if <code>null</code>,restores derivatives to default control and
          * <code>null</code>'s any actions associated with this control point.
          *

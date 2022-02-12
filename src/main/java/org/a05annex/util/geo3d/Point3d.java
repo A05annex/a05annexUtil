@@ -36,7 +36,6 @@ public class Point3d implements Cloneable {
      *
      * @param ptInit The location of the instantiated point.
      */
-    @SuppressWarnings("CopyConstructorMissesField")
     public Point3d(final Point3d ptInit) {
         setValue(ptInit);
     }
@@ -130,16 +129,16 @@ public class Point3d implements Cloneable {
         return Math.sqrt((dx * dx) + (dy * dy) + (dz * dz));
     }
 
-    /**
-     * Get the perpendicular distance between this point and a line.  This is done geometrically by first defining a plane
-     * with the line (the plane perpendicular to the line that goes through the origin of the line), finding the distance
-     * from this point to that plane, and then projecting the origin of the line by that distance along the line so that
-     * we have a point on the line that is on a plane perpendicular to the line that also contains this point.  After all
-     * that, we simply get the distance between the two points.
-     *
-     * @param ln The line we will get the perpendicular distance from.  For best results, the line should be normalized.
-     * @return Returns the perpendicular distance from this point to the line <code>ln</code>.
-     */
+//    /**
+//     * Get the perpendicular distance between this point and a line.  This is done geometrically by first defining a plane
+//     * with the line (the plane perpendicular to the line that goes through the origin of the line), finding the distance
+//     * from this point to that plane, and then projecting the origin of the line by that distance along the line so that
+//     * we have a point on the line that is on a plane perpendicular to the line that also contains this point.  After all
+//     * that, we simply get the distance between the two points.
+//     *
+//     * @param ln The line we will get the perpendicular distance from.  For best results, the line should be normalized.
+//     * @return Returns the perpendicular distance from this point to the line <code>ln</code>.
+//     */
 //    public float getDistanceTo(final Line3f ln) {
 //        // get the D of the plane
 //        final float fD = -((ln.direction.i * ln.origin.x) + (ln.direction.j * ln.origin.y) + (ln.direction.k * ln.origin.z));
@@ -181,7 +180,8 @@ public class Point3d implements Cloneable {
      * @return Returns a clone of the point.
      */
     @Override
-    public Object clone() {
+    public Object clone() throws CloneNotSupportedException {
+        Object o = super.clone();
         return clonePoint3d();
     }
 

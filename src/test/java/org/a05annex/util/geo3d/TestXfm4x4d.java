@@ -46,7 +46,7 @@ public class TestXfm4x4d {
      */
     @Test
     @DisplayName("test translate a translate")
-    void testTranslatetranslate() {
+    void testTranslateTranslate() {
         Xfm4x4d xfm = new Xfm4x4d().translate(1.0, 2.0, 3.0).translate(1.0, 2.0, 3.0);
         assertEquals( 2.0, xfm.get(0,3));
         assertEquals( 4.0, xfm.get(1,3));
@@ -86,27 +86,27 @@ public class TestXfm4x4d {
     // only translation/rotation transformations our angles and lengths are also invariant. Adding shear and scale screws up angles
     // and lengths making ray tracing unpredictable. So if we have a set of reference unit vectors, they should stay unit vectors.
     // Dot products and cross products should be the same after transformation (within the zero tolerance).
-    static Vector3d[] _testVectors = {
+    static final Vector3d[] _testVectors = {
             new Vector3d(1.0f,0.0f,0.0f),
             new Vector3d(0.0f,1.0f,0.0f),
             new Vector3d(0.0f,0.0f,1.0f),
             new Vector3d(Math.sqrt(1.0f/3.0f),Math.sqrt(1.0f/3.0f),Math.sqrt(1.0f/3.0f))
     };
 
-    static double[] _testdotProducts = {
+    static double[] _testDotProducts = {
             _testVectors[0].dot(_testVectors[3]),
             _testVectors[1].dot(_testVectors[3]),
             _testVectors[2].dot(_testVectors[3])
     };
 
-    static Vector3d[] _xfmTestVectors = {
+    static final Vector3d[] _xfmTestVectors = {
             new Vector3d(),
             new Vector3d(),
             new Vector3d(),
             new Vector3d()
     };
 
-    static Vector3d[] _backXfmTestVectors = {
+    static final Vector3d[] _backXfmTestVectors = {
             new Vector3d(),
             new Vector3d(),
             new Vector3d(),
@@ -129,16 +129,16 @@ public class TestXfm4x4d {
                 fail("expected unit vector after transformation, expected 1.000, but length was: " + length);
             }
         }
-        for (int i = 0; i < _testdotProducts.length; i++) {
+        for (int i = 0; i < _testDotProducts.length; i++) {
             double testDot = _testVectors[i].dot(_testVectors[3]);
-            if (!PackageConstants.isZero(_testdotProducts[i] - testDot)) {
-                fail("unexpected dot product after transformation, expected " + _testdotProducts[i]
+            if (!PackageConstants.isZero(_testDotProducts[i] - testDot)) {
+                fail("unexpected dot product after transformation, expected " + _testDotProducts[i]
                         + " but dot was: " + testDot);
             }
         }
     }
 
-    static Xfm4x4d _inverseXfmForTest = new Xfm4x4d();
+    static final Xfm4x4d _inverseXfmForTest = new Xfm4x4d();
 
 
     static private void _testInverse(Xfm4x4d xfm) {
