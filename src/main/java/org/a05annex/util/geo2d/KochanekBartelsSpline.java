@@ -160,7 +160,7 @@ public class KochanekBartelsSpline {
     // -----------------------------------------------------------------------------------------------------------------
 
     /**
-     *
+     * This enumeration represents the types of robot actions that can be initiated along the path.
      */
     public enum RobotActionType {
         /**
