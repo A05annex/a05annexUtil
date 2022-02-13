@@ -282,6 +282,21 @@ public class KochanekBartelsSpline {
 
         public final RobotAction action;
 
+        public PathPoint(@NotNull ControlPoint controlPoint, @NotNull RobotAction robotAction) {
+            this.time = controlPoint.m_time;
+            this.fieldPt = new Point2D.Double(controlPoint.m_fieldX, controlPoint.m_fieldY);
+            this.fieldHeading = controlPoint.m_fieldHeading;
+            this.field_dX = 0.0;
+            this.field_dY = 0.0;
+            this.field_dHeading = 0.0;
+            this.speedForward = 0.0;
+            this.speedStrafe = 0.0;
+            this.speedRotation = 0.0;
+            this.action = robotAction;
+            this.previousControlPoint = controlPoint;
+            this.nextControlPoint = controlPoint.m_next;
+        }
+
         /**
          * Instantiate a Path Point.
          *
@@ -970,11 +985,14 @@ public class KochanekBartelsSpline {
 
         final double m_speedMultiplier;
 
+        boolean m_firstPoint = true;
+
         PathGenerator(double speedMultiplier) {
+            m_speedMultiplier = speedMultiplier;
             if (m_first != null) {
                 m_first.pkgComputeTangentInOut();
             }
-            m_speedMultiplier = speedMultiplier;
+            resetSegment();
         }
 
         /**
@@ -1009,17 +1027,31 @@ public class KochanekBartelsSpline {
          * the last control point in the path.
          */
         protected PathPoint getPointOnSegment(double time) {
-
+            RobotAction robotAction = null;
+            if (m_firstPoint) {
+                // if this is a first point
+                m_firstPoint = false;
+                robotAction = m_thisSegmentStart.getRobotAction();
+                // and there is a stop and do something action
+                if (null != robotAction) {
+                    return new PathPoint(m_thisSegmentStart, robotAction);
+                }
+            }
             double pathTime = time * m_speedMultiplier;
             while (pathTime > m_thisSegmentEnd.m_time) {
                 // past the end of this segment, move on to the next.
                 m_thisSegmentStart = m_thisSegmentEnd;
                 m_thisSegmentEnd = m_thisSegmentStart.m_next;
+                resetSegment();
+                robotAction = m_thisSegmentStart.getRobotAction();
+                if (null != robotAction) {
+                    return new PathPoint(m_thisSegmentStart, robotAction);
+                }
                 if (null == m_thisSegmentEnd) {
-                    // No more segments, we are done.
+                    // No more segments, we are done. However, it could be that there is an action at the
+                    // last control point
                     return null;
                 }
-                resetSegment();
             }
             // create and return the path point
             double sValue = (pathTime - m_thisSegmentStart.m_time) / (m_thisSegmentEnd.m_time - m_thisSegmentStart.m_time);
@@ -1091,7 +1123,6 @@ public class KochanekBartelsSpline {
          */
         private PathIterator(double deltaTime, double speedMultiplier) {
             super(speedMultiplier);
-            resetSegment();
             m_time = 0.0;
             m_deltaTime = deltaTime;
         }
@@ -1147,7 +1178,6 @@ public class KochanekBartelsSpline {
          */
         private PathFollower(double speedMultiplier) {
             super(speedMultiplier);
-            resetSegment();
         }
 
         /**
