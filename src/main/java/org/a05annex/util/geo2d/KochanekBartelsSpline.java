@@ -83,6 +83,8 @@ public class KochanekBartelsSpline {
     static final String FIELD_dHEADING = "field_dHeading";
     static final String ROBOT_ACTION_COMMAND = "robotActionCommand";
     static final String ROBOT_ACTION_DURATION = "robotActionDuration";
+    static final String ROBOT_SCHEDULED_ACTIONS = "robotScheduledActions";
+    static final String ROBOT_SCHEDULED_ACTION_TIME = "robotScheduledActionTime";
 
     // -----------------------------------------------------------------------------------------------------------------
     /**
@@ -152,6 +154,10 @@ public class KochanekBartelsSpline {
      * The last control point in this doubly-linked list of control points for the spline.
      */
     private ControlPoint m_last = null;
+    /**
+     *
+     */
+    private final ScheduledActionList m_scheduledActions = new ScheduledActionList();
 
     // -----------------------------------------------------------------------------------------------------------------
     // Robot actions - either:
@@ -205,36 +211,127 @@ public class KochanekBartelsSpline {
          */
         public final double approxDuration;
 
+        double pathTime;
+
+
+
         /**
          * Instantiate a schedule command action that should be performed in parallel with path following.
          *
+         * @param pathTime The time along the path hen the command should be scheduled to execute.
          * @param command The name of the class (not including path info).
          */
-        public RobotAction(@NotNull String command) {
+        RobotAction(double pathTime, @NotNull String command) {
             this.actionType = RobotActionType.SCHEDULE_COMMAND;
             this.command = command;
-            this.approxDuration = 0.0;
+            this.approxDuration = -1.0;
+            this.pathTime = pathTime;
         }
 
         /**
-         * Instantiate either:
-         * <ul>
-         *     <li>{@link RobotActionType#STOP_AND_RUN_COMMAND}: stop robot and run a command. Refer
-         *     to the {@link RobotActionType} documentation for details;</li>
-         *     <li>{@link RobotActionType#SCHEDULE_COMMAND}: schedule a command to run concurrently
-         *     with path following. Refer to the {@link RobotActionType} documentation for details.</li>
-         * </ul>
+         * Instantiate either a control point action to stop and run a command.
          *
-         * @param actionType     Either {@link RobotActionType#STOP_AND_RUN_COMMAND} or
-         *                       {@link RobotActionType#SCHEDULE_COMMAND}
          * @param command        The name of the class (not including path info).
          * @param approxDuration An approximate duration for the command, used in path planning. Completely
          *                       ignored when the robot is following a path.
          */
-        public RobotAction(@NotNull RobotActionType actionType, @NotNull String command, double approxDuration) {
-            this.actionType = actionType;
+        RobotAction(@NotNull String command, double approxDuration) {
+            this.actionType = RobotActionType.STOP_AND_RUN_COMMAND;
             this.command = command;
             this.approxDuration = (actionType == RobotActionType.SCHEDULE_COMMAND) ? 0.0 : approxDuration;
+            this.pathTime = -1.0;
+        }
+    }
+
+    /**
+     * This is a linked list of schedule commands ordered by when they should be scheduled in path time.
+     */
+    class ScheduledActionList {
+
+        class ScheduledAction {
+            final RobotAction robotAction;
+            private ScheduledAction next = null;
+
+            private ScheduledAction(double pathTime, @NotNull RobotAction robotAction, ScheduledAction next) {
+                this.robotAction = robotAction;
+                this.next = next;
+            }
+        }
+
+        private ScheduledAction head = null;
+
+        ScheduledActionList() {  }
+
+        ScheduledAction getHead() {
+            return head;
+        }
+
+        RobotAction scheduleAction(double pathTime, @NotNull String command) {
+            RobotAction robotAction = new RobotAction(pathTime, command);
+            if ((null == head) || (pathTime < head.robotAction.pathTime)) {
+                // the first one, this is easy.
+                head = new ScheduledAction(pathTime, robotAction, head);
+            } else {
+                // step through the list until you find the right insertion point.
+                ScheduledAction currentAction = head;
+                while (null != currentAction) {
+                    if ((null == currentAction.next) || (currentAction.next.robotAction.pathTime > pathTime)) {
+                        // this action should be scheduled after the currentAction and before the
+                        // next action.
+                        currentAction.next = new ScheduledAction(pathTime, robotAction, currentAction.next);
+                        break;
+                    }
+                    currentAction = currentAction.next;
+                }
+            }
+            return robotAction;
+        }
+
+        boolean deleteAction(@NotNull RobotAction robotAction) {
+            if (null == head) {
+                return false;
+            }
+            ScheduledAction lastScheduledAction = null;
+            ScheduledAction nextScheduledAction = head;
+            while (null != nextScheduledAction) {
+                if ((nextScheduledAction.robotAction.pathTime == robotAction.pathTime) &&
+                        (nextScheduledAction.robotAction.command.equals(robotAction.command))) {
+                    // this is the action to delete
+                    if (null == lastScheduledAction) {
+                        head = nextScheduledAction.next;
+                    } else {
+                        lastScheduledAction.next = nextScheduledAction.next;
+                    }
+                    return true;
+                }
+                lastScheduledAction = nextScheduledAction;
+                nextScheduledAction = lastScheduledAction.next;
+            }
+            return false;
+        }
+
+        void clear() {
+            head = null;
+        }
+
+        void toJson(JSONArray jsonScheduledActions) {
+            ScheduledAction scheduledAction = head;
+            while (null != scheduledAction) {
+                JSONObject jsonScheduledAction = new JSONObject();
+                jsonScheduledAction.put(ROBOT_SCHEDULED_ACTION_TIME, scheduledAction.robotAction.pathTime);
+                jsonScheduledAction.put(ROBOT_ACTION_COMMAND, scheduledAction.robotAction.command);
+                jsonScheduledActions.add(jsonScheduledAction);
+                scheduledAction = scheduledAction.next;
+            }
+        }
+
+        void fromJson(@NotNull JSONArray scheduledActions) {
+            for (Object scheduledAction : scheduledActions) {
+                JSONObject saJson = (JSONObject)scheduledAction;
+                double pathTime = parseDouble(saJson, ROBOT_SCHEDULED_ACTION_TIME, 0.0);
+                String command = parseString(saJson, ROBOT_ACTION_COMMAND, "");
+                scheduleAction(pathTime, command);
+            }
         }
     }
 
@@ -857,8 +954,7 @@ public class KochanekBartelsSpline {
          * should be performed.
          */
         public RobotAction getRobotAction() {
-            return (null == m_robotAction) ? null : new RobotAction(RobotActionType.STOP_AND_RUN_COMMAND,
-                    m_robotAction, m_actionDuration);
+            return (null == m_robotAction) ? null : new RobotAction(m_robotAction, m_actionDuration);
         }
 
         /**
@@ -987,6 +1083,8 @@ public class KochanekBartelsSpline {
 
         boolean m_firstPoint = true;
 
+        ScheduledActionList.ScheduledAction nextAction = m_scheduledActions.getHead();
+
         PathGenerator(double speedMultiplier) {
             m_speedMultiplier = speedMultiplier;
             if (m_first != null) {
@@ -1095,10 +1193,15 @@ public class KochanekBartelsSpline {
             double forward = ((dField[0] * sinHeading) + (dField[1] * cosHeading)) * m_speedMultiplier;
             double strafe = ((dField[0] * cosHeading) - (dField[1] * sinHeading)) * m_speedMultiplier;
             // create and return the path point
+            robotAction  = null;
+            if ((null != nextAction) && (nextAction.robotAction.pathTime <= pathTime)) {
+                robotAction = nextAction.robotAction;
+                nextAction = nextAction.next;
+            }
             return new PathPoint(time, field[0], field[1], new AngleD(AngleUnit.RADIANS, field[2]),
                     dField[0], dField[1], dField[2],
                     forward, strafe, dField[2] * m_speedMultiplier,
-                    null, m_thisSegmentStart, m_thisSegmentEnd);
+                    robotAction, m_thisSegmentStart, m_thisSegmentEnd);
         }
     }
 
@@ -1340,6 +1443,7 @@ public class KochanekBartelsSpline {
         m_description = DEFAULT_DESCRIPTION;
         m_first = null;
         m_last = null;
+        m_scheduledActions.clear();
         m_speedMultiplier = 1.0;
     }
 
@@ -1434,6 +1538,14 @@ public class KochanekBartelsSpline {
         }
     }
 
+    public RobotAction scheduleCommand(double pathTime, @NotNull String command) {
+        return m_scheduledActions.scheduleAction(pathTime, command);
+    }
+
+    public boolean deleteScheduledCommand(@NotNull RobotAction robotAction) {
+        return m_scheduledActions.deleteAction(robotAction);
+    }
+
     /**
      * This factory method instantiates a control point iterator.
      *
@@ -1510,6 +1622,11 @@ public class KochanekBartelsSpline {
                 }
                 m_last = newControlPoint;
             }
+            JSONArray scheduledActions = getJSONArray(path, ROBOT_SCHEDULED_ACTIONS, false);
+            if (null != scheduledActions) {
+                m_scheduledActions.fromJson(scheduledActions);
+            }
+
             // now that the points are reloaded, recompute the derivatives for any points that
             // have not been manually edited
             for (ControlPoint point : getControlPoints()) {
@@ -1517,7 +1634,7 @@ public class KochanekBartelsSpline {
                 point.updateHeadingDerivative();
             }
             // and, the derivatives for the first point is dependent on the derivatives for
-            // the later points in the spline, so recompute that now that we have the later points.
+            // the latter points in the spline, so recompute that now that we have the latter points.
             if (null != m_first) {
                 m_first.updateLocationDerivatives();
             }
@@ -1546,6 +1663,9 @@ public class KochanekBartelsSpline {
         for (ControlPoint pt : getControlPoints()) {
             controlPoints.add(pt.toJSON());
         }
+        JSONArray scheduledActions = new JSONArray();
+        path.put(ROBOT_SCHEDULED_ACTIONS, scheduledActions);
+        m_scheduledActions.toJson(scheduledActions);
         //Write JSON file
         try (FileWriter file = new FileWriter(filename)) {
             file.write(path.toJSONString());
