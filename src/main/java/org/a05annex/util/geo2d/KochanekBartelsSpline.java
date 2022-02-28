@@ -1081,30 +1081,30 @@ public class KochanekBartelsSpline {
         /**
          * The start of the segment being generated, will be {@code null} if no control points have been defined.
          */
-        ControlPoint m_thisSegmentStart = first;
+        ControlPoint thisSegmentStart = first;
         /**
          * The end of the segment being generated, will be{@code null} if less than 2 control points have been
          * defined.
          */
-        ControlPoint m_thisSegmentEnd = first == null ? null : first.m_next;
+        ControlPoint thisSegmentEnd = first == null ? null : first.m_next;
         /**
          * The control point location, heading, derivatives matrix for this segment of
          */
-        final double[][] m_segment = {
+        final double[][] segment = {
                 {0.0, 0.0, 0.0},
                 {0.0, 0.0, 0.0},
                 {0.0, 0.0, 0.0},
                 {0.0, 0.0, 0.0}
         };
 
-        final double m_speedMultiplier;
+        final double speedMultiplier;
 
-        boolean m_firstPoint = true;
+        boolean firstPoint = true;
 
         ScheduledActionList.ScheduledAction nextAction = scheduledActions.getHead();
 
         PathGenerator(double speedMultiplier) {
-            m_speedMultiplier = speedMultiplier;
+            this.speedMultiplier = speedMultiplier;
             if (first != null) {
                 first.pkgComputeTangentInOut();
             }
@@ -1112,26 +1112,26 @@ public class KochanekBartelsSpline {
         }
 
         /**
-         * Reset the {@link #m_segment} matrix when the control points for the segment are advanced.
+         * Reset the {@link #segment} matrix when the control points for the segment are advanced.
          */
         protected void resetSegment() {
-            if (null == m_thisSegmentEnd) {
+            if (null == thisSegmentEnd) {
                 // we are done with this spline, just return.
                 return;
             }
-            m_thisSegmentEnd.pkgComputeTangentInOut();
-            m_segment[0][0] = m_thisSegmentStart.m_fieldX;
-            m_segment[1][0] = m_thisSegmentEnd.m_fieldX;
-            m_segment[2][0] = m_thisSegmentStart.m_dXout;
-            m_segment[3][0] = m_thisSegmentEnd.m_dXin;
-            m_segment[0][1] = m_thisSegmentStart.m_fieldY;
-            m_segment[1][1] = m_thisSegmentEnd.m_fieldY;
-            m_segment[2][1] = m_thisSegmentStart.m_dYout;
-            m_segment[3][1] = m_thisSegmentEnd.m_dYin;
-            m_segment[0][2] = m_thisSegmentStart.m_fieldHeading.getRadians();
-            m_segment[1][2] = m_thisSegmentEnd.m_fieldHeading.getRadians();
-            m_segment[2][2] = m_thisSegmentStart.m_dHeadingOut;
-            m_segment[3][2] = m_thisSegmentEnd.m_dHeadingIn;
+            thisSegmentEnd.pkgComputeTangentInOut();
+            segment[0][0] = thisSegmentStart.m_fieldX;
+            segment[1][0] = thisSegmentEnd.m_fieldX;
+            segment[2][0] = thisSegmentStart.m_dXout;
+            segment[3][0] = thisSegmentEnd.m_dXin;
+            segment[0][1] = thisSegmentStart.m_fieldY;
+            segment[1][1] = thisSegmentEnd.m_fieldY;
+            segment[2][1] = thisSegmentStart.m_dYout;
+            segment[3][1] = thisSegmentEnd.m_dYin;
+            segment[0][2] = thisSegmentStart.m_fieldHeading.getRadians();
+            segment[1][2] = thisSegmentEnd.m_fieldHeading.getRadians();
+            segment[2][2] = thisSegmentStart.m_dHeadingOut;
+            segment[3][2] = thisSegmentEnd.m_dHeadingIn;
         }
 
         /**
@@ -1144,33 +1144,33 @@ public class KochanekBartelsSpline {
          */
         protected PathPoint getPointOnSegment(double time) {
             RobotAction robotAction = null;
-            if (m_firstPoint) {
+            if (firstPoint) {
                 // if this is a first point
-                m_firstPoint = false;
-                robotAction = m_thisSegmentStart.getRobotAction();
+                firstPoint = false;
+                robotAction = thisSegmentStart.getRobotAction();
                 // and there is a stop and do something action
                 if (null != robotAction) {
-                    return new PathPoint(m_thisSegmentStart, robotAction);
+                    return new PathPoint(thisSegmentStart, robotAction);
                 }
             }
-            double pathTime = time * m_speedMultiplier;
-            while (pathTime > m_thisSegmentEnd.m_time) {
+            double pathTime = time * speedMultiplier;
+            while (pathTime > thisSegmentEnd.m_time) {
                 // past the end of this segment, move on to the next.
-                m_thisSegmentStart = m_thisSegmentEnd;
-                m_thisSegmentEnd = m_thisSegmentStart.m_next;
+                thisSegmentStart = thisSegmentEnd;
+                thisSegmentEnd = thisSegmentStart.m_next;
                 resetSegment();
-                robotAction = m_thisSegmentStart.getRobotAction();
+                robotAction = thisSegmentStart.getRobotAction();
                 if (null != robotAction) {
-                    return new PathPoint(m_thisSegmentStart, robotAction);
+                    return new PathPoint(thisSegmentStart, robotAction);
                 }
-                if (null == m_thisSegmentEnd) {
+                if (null == thisSegmentEnd) {
                     // No more segments, we are done. However, it could be that there is an action at the
                     // last control point
                     return null;
                 }
             }
             // create and return the path point
-            double sValue = (pathTime - m_thisSegmentStart.m_time) / (m_thisSegmentEnd.m_time - m_thisSegmentStart.m_time);
+            double sValue = (pathTime - thisSegmentStart.m_time) / (thisSegmentEnd.m_time - thisSegmentStart.m_time);
             // get the next point on the curve
             // The s[] vector is s to the third, second, first, and 0th power
             double[] s = {sValue * sValue * sValue, sValue * sValue, sValue, 1.0};
@@ -1195,21 +1195,21 @@ public class KochanekBartelsSpline {
             double[] dField = {0.0, 0.0, 0.0};
             for (int i = 0; i < 3; i++) {
                 for (int j = 0; j < 4; j++) {
-                    field[i] += weights[j] * m_segment[j][i];
-                    dField[i] += dWeights[j] * m_segment[j][i];
+                    field[i] += weights[j] * segment[j][i];
+                    dField[i] += dWeights[j] * segment[j][i];
                 }
             }
 
             // Correct the derivatives for time
             for (int i = 0; i < 3; i++) {
-                dField[i] /= (m_thisSegmentEnd.m_time - m_thisSegmentStart.m_time);
+                dField[i] /= (thisSegmentEnd.m_time - thisSegmentStart.m_time);
             }
             // OK, the position derivatives are X and Y relative to the field. These need to be transformed to
             // robot relative forward and strafe.
             double sinHeading = Math.sin(field[2]);
             double cosHeading = Math.cos(field[2]);
-            double forward = ((dField[0] * sinHeading) + (dField[1] * cosHeading)) * m_speedMultiplier;
-            double strafe = ((dField[0] * cosHeading) - (dField[1] * sinHeading)) * m_speedMultiplier;
+            double forward = ((dField[0] * sinHeading) + (dField[1] * cosHeading)) * speedMultiplier;
+            double strafe = ((dField[0] * cosHeading) - (dField[1] * sinHeading)) * speedMultiplier;
             // create and return the path point
             robotAction  = null;
             if ((null != nextAction) && (nextAction.robotAction.pathTime <= pathTime)) {
@@ -1218,8 +1218,8 @@ public class KochanekBartelsSpline {
             }
             return new PathPoint(time, field[0], field[1], new AngleD(AngleUnit.RADIANS, field[2]),
                     dField[0], dField[1], dField[2],
-                    forward, strafe, dField[2] * m_speedMultiplier,
-                    robotAction, m_thisSegmentStart, m_thisSegmentEnd);
+                    forward, strafe, dField[2] * speedMultiplier,
+                    robotAction, thisSegmentStart, thisSegmentEnd);
         }
     }
 
@@ -1228,8 +1228,8 @@ public class KochanekBartelsSpline {
      */
     public class PathIterator extends PathGenerator implements Iterator<PathPoint>, Iterable<PathPoint> {
         /**
-         * The current position on the segment being generated, from 0.0 being on {@link #m_thisSegmentStart}
-         * to 1.0 being on {@link #m_thisSegmentEnd}.
+         * The current position on the segment being generated, from 0.0 being on {@link #thisSegmentStart}
+         * to 1.0 being on {@link #thisSegmentEnd}.
          */
         double m_time;
         /**
@@ -1255,7 +1255,7 @@ public class KochanekBartelsSpline {
          */
         @Override
         public boolean hasNext() {
-            return (null != m_thisSegmentEnd) && ((m_time * m_speedMultiplier) <= last.m_time);
+            return (null != thisSegmentEnd) && ((m_time * speedMultiplier) <= last.m_time);
         }
 
         /**
@@ -1310,7 +1310,7 @@ public class KochanekBartelsSpline {
          */
         public PathPoint getPointAt(double time) {
             // get the next point on the curve
-            if (m_thisSegmentEnd == null) {
+            if (thisSegmentEnd == null) {
                 return null;
             }
             // create and return the path point
