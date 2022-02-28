@@ -1139,17 +1139,19 @@ public class KochanekBartelsSpline {
          * for the specified time along the path. NOTE: The time must be monotonically increasing
          *
          * @param time The time, in seconds, along the path for which the {@link PathPoint} will be generated.
+         * @param skipCommands if {@code true}, commands will be skipped, otherwise commands will be processed
+         *                     returned in path points and control points.
          * @return Returns the {@link PathPoint} for the specified time, or {@code null} if the time is beyond
          * the last control point in the path.
          */
-        protected PathPoint getPointOnSegment(double time) {
+        protected PathPoint getPointOnSegment(double time, boolean skipCommands) {
             RobotAction robotAction = null;
             if (firstPoint) {
                 // if this is a first point
                 firstPoint = false;
                 robotAction = thisSegmentStart.getRobotAction();
                 // and there is a stop and do something action
-                if (null != robotAction) {
+                if (!skipCommands && (null != robotAction)) {
                     return new PathPoint(thisSegmentStart, robotAction);
                 }
             }
@@ -1160,7 +1162,7 @@ public class KochanekBartelsSpline {
                 thisSegmentEnd = thisSegmentStart.m_next;
                 resetSegment();
                 robotAction = thisSegmentStart.getRobotAction();
-                if (null != robotAction) {
+                if (!skipCommands && (null != robotAction)) {
                     return new PathPoint(thisSegmentStart, robotAction);
                 }
                 if (null == thisSegmentEnd) {
@@ -1177,7 +1179,7 @@ public class KochanekBartelsSpline {
             // the ds[] vector is the derivative of the s[] vector
             double[] ds = {3.0 * sValue * sValue, 2.0 * sValue, 1.0, 0.0};
             // This first transformation multiples the s and derivative s matrices by the
-            // the basis functions to get the weights that are applied to the segment start and
+            // basis functions to get the weights that are applied to the segment start and
             // end point
             double[] weights = {0.0, 0.0, 0.0, 0.0};
             double[] dWeights = {0.0, 0.0, 0.0, 0.0};
@@ -1212,7 +1214,7 @@ public class KochanekBartelsSpline {
             double strafe = ((dField[0] * cosHeading) - (dField[1] * sinHeading)) * speedMultiplier;
             // create and return the path point
             robotAction  = null;
-            if ((null != nextAction) && (nextAction.robotAction.pathTime <= pathTime)) {
+            if (!skipCommands && (null != nextAction) && (nextAction.robotAction.pathTime <= pathTime)) {
                 robotAction = nextAction.robotAction;
                 nextAction = nextAction.next;
             }
@@ -1266,7 +1268,7 @@ public class KochanekBartelsSpline {
         @Override
         public PathPoint next() {
             // get the next point on the curve
-            PathPoint pathPoint = getPointOnSegment(m_time);
+            PathPoint pathPoint = getPointOnSegment(m_time, false);
             // get ready for the next point
             m_time += m_deltaTime;
             // create and return the path point
@@ -1309,12 +1311,20 @@ public class KochanekBartelsSpline {
          * past the end of the end of the path (the time of the last control point on the path)..
          */
         public PathPoint getPointAt(double time) {
+            return getPathPoint(time, false);
+        }
+
+        private PathPoint getRawPathPoint(double time) {
+            return getPathPoint(time, true);
+        }
+
+        private PathPoint getPathPoint(double time, boolean skipCommands) {
             // get the next point on the curve
             if (thisSegmentEnd == null) {
                 return null;
             }
             // create and return the path point
-            return getPointOnSegment(time);
+            return getPointOnSegment(time, skipCommands);
         }
     }
 
@@ -1524,7 +1534,7 @@ public class KochanekBartelsSpline {
 
         // get the point on the path at the specified time
         PathFollower pathFollower = new PathFollower(1.0);
-        PathPoint pathPoint = pathFollower.getPointAt(time);
+        PathPoint pathPoint = pathFollower.getRawPathPoint(time);
         return insertControlPoint(pathPoint);
     }
 
