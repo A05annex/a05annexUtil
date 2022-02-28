@@ -129,7 +129,7 @@ public class KochanekBartelsSpline {
      * The basis matrix that provides the weighting of the [s] matrix (position on the segment of the spline to
      * various powers) as applied to the start and end positions and derivatives.
      */
-    static final double[][] m_basis = {
+    static final double[][] basis = {
             {2.0, -2.0, 1.0, 1.0},
             {-3.0, 3.0, -2.0, -1.0},
             {0.0, 0.0, 1.0, 0.0},
@@ -139,25 +139,25 @@ public class KochanekBartelsSpline {
     /**
      * The title of this path.
      */
-    private String m_title = DEFAULT_TITLE;
+    private String title = DEFAULT_TITLE;
     /**
      * The description of this path.
      */
-    private String m_description = DEFAULT_DESCRIPTION;
+    private String description = DEFAULT_DESCRIPTION;
 
-    private double m_speedMultiplier = 1.0;
+    private double speedMultiplier = 1.0;
     /**
      * The first control point in this doubly-linked list of control points for the spline.
      */
-    private ControlPoint m_first = null;
+    private ControlPoint first = null;
     /**
      * The last control point in this doubly-linked list of control points for the spline.
      */
-    private ControlPoint m_last = null;
+    private ControlPoint last = null;
     /**
-     *
+     * This is a time-sorted linked list of actions to be scheduled at specific times along the path.
      */
-    private final ScheduledActionList m_scheduledActions = new ScheduledActionList();
+    private final ScheduledActionList scheduledActions = new ScheduledActionList();
 
     // -----------------------------------------------------------------------------------------------------------------
     // Robot actions - either:
@@ -229,7 +229,7 @@ public class KochanekBartelsSpline {
         }
 
         /**
-         * Instantiate either a control point action to stop and run a command.
+         * Instantiate either a stop and run command.
          *
          * @param command        The name of the class (not including path info).
          * @param approxDuration An approximate duration for the command, used in path planning. Completely
@@ -238,7 +238,7 @@ public class KochanekBartelsSpline {
         RobotAction(@NotNull String command, double approxDuration) {
             this.actionType = RobotActionType.STOP_AND_RUN_COMMAND;
             this.command = command;
-            this.approxDuration = (actionType == RobotActionType.SCHEDULE_COMMAND) ? 0.0 : approxDuration;
+            this.approxDuration = approxDuration;
             this.pathTime = -1.0;
         }
     }
@@ -252,7 +252,7 @@ public class KochanekBartelsSpline {
             final RobotAction robotAction;
             private ScheduledAction next = null;
 
-            private ScheduledAction(double pathTime, @NotNull RobotAction robotAction, ScheduledAction next) {
+            private ScheduledAction(@NotNull RobotAction robotAction, ScheduledAction next) {
                 this.robotAction = robotAction;
                 this.next = next;
             }
@@ -270,7 +270,7 @@ public class KochanekBartelsSpline {
             RobotAction robotAction = new RobotAction(pathTime, command);
             if ((null == head) || (pathTime < head.robotAction.pathTime)) {
                 // the first one, this is easy.
-                head = new ScheduledAction(pathTime, robotAction, head);
+                head = new ScheduledAction(robotAction, head);
             } else {
                 // step through the list until you find the right insertion point.
                 ScheduledAction currentAction = head;
@@ -278,7 +278,7 @@ public class KochanekBartelsSpline {
                     if ((null == currentAction.next) || (currentAction.next.robotAction.pathTime > pathTime)) {
                         // this action should be scheduled after the currentAction and before the
                         // next action.
-                        currentAction.next = new ScheduledAction(pathTime, robotAction, currentAction.next);
+                        currentAction.next = new ScheduledAction(robotAction, currentAction.next);
                         break;
                     }
                     currentAction = currentAction.next;
@@ -460,6 +460,7 @@ public class KochanekBartelsSpline {
      * manipulation of a control point affects derivatives of the adjacent control points.
      */
     public static class ControlPoint {
+        final KochanekBartelsSpline m_path;
         ControlPoint m_next = null;
         ControlPoint m_last = null;
         double m_fieldX = 0.0;
@@ -488,18 +489,22 @@ public class KochanekBartelsSpline {
          * Instantiate a control point and set the time this control point should be reached when the path
          * is traversed.
          *
+         * @param path (not null, KochanekBartelsSpline) The path this is a control point for.
          * @param timeInSec (double) The time this control point should be reached (in seconds).
          */
-        public ControlPoint(double timeInSec) {
+        public ControlPoint(@NotNull  KochanekBartelsSpline path, double timeInSec) {
+            m_path = path;
             m_time = timeInSec;
         }
 
         /**
          * Instantiate a control point read from a JSON file.
          *
+         * @param path (not null, KochanekBartelsSpline) The path this is a control point for.
          * @param json (not null, JSONObject) The JSONObject to read the control point from.
          */
-        public ControlPoint(@NotNull JSONObject json) {
+        public ControlPoint(@NotNull  KochanekBartelsSpline path, @NotNull JSONObject json) {
+            m_path = path;
             m_fieldX = parseDouble(json, FIELD_X, 0.0);
             m_fieldY = parseDouble(json, FIELD_Y, 0.0);
             m_fieldHeading.setValue(AngleUnit.RADIANS, parseDouble(json, FIELD_HEADING, 0.0));
@@ -862,12 +867,12 @@ public class KochanekBartelsSpline {
                 m_dHeading = 0.0;
             } else {
                 double fieldHeadingPrev = m_last != null ?
-//                        m_last.m_fieldHeading : m_fieldHeading - (m_next.m_fieldHeading - m_fieldHeading);
+//                        last.m_fieldHeading : m_fieldHeading - (m_next.m_fieldHeading - m_fieldHeading);
                         m_last.m_fieldHeading.getRadians() :
                         m_fieldHeading.getRadians() -
                                 (m_next.m_fieldHeading.getRadians() - m_fieldHeading.getRadians());
                 double fieldHeadingNext = m_next != null ?
-//                        m_next.m_fieldHeading : m_fieldHeading + (m_fieldHeading - m_last.m_fieldHeading);
+//                        m_next.m_fieldHeading : m_fieldHeading + (m_fieldHeading - last.m_fieldHeading);
                         m_next.m_fieldHeading.getRadians() :
                         m_fieldHeading.getRadians() +
                                 (m_fieldHeading.getRadians() - m_last.m_fieldHeading.getRadians());
@@ -908,13 +913,26 @@ public class KochanekBartelsSpline {
             if ((null != m_next) && time >= m_next.m_time) {
                 throw new IllegalArgumentException("The time must be less than the time of the next control point.");
             }
+            double propagationStartTime = m_time;
             double delta = time - m_time;
             m_time = time;
             if (propagate) {
+                // We are propagating this time change through the path following this control point.
+                // Loop through the control points after this control point and add 'delta' to
+                //    their time.
                 ControlPoint controlPoint = this;
                 while (null != controlPoint.m_next) {
                     controlPoint = controlPoint.m_next;
                     controlPoint.m_time += delta;
+                }
+                // Loop through scheduled commands and for commands after this control point add
+                //    'delta' to their time.
+                ScheduledActionList.ScheduledAction scheduledAction = controlPoint.m_path.scheduledActions.head;
+                while (null != scheduledAction) {
+                    if (scheduledAction.robotAction.pathTime > propagationStartTime) {
+                        scheduledAction.robotAction.pathTime += delta;
+                    }
+                    scheduledAction = scheduledAction.next;
                 }
             }
         }
@@ -1017,7 +1035,7 @@ public class KochanekBartelsSpline {
      */
     public class ControlPointIterator implements Iterator<ControlPoint>, Iterable<ControlPoint> {
 
-        private ControlPoint m_current = m_first;
+        private ControlPoint m_current = first;
 
         /**
          * Instantiate the control point iterator.
@@ -1063,12 +1081,12 @@ public class KochanekBartelsSpline {
         /**
          * The start of the segment being generated, will be {@code null} if no control points have been defined.
          */
-        ControlPoint m_thisSegmentStart = m_first;
+        ControlPoint m_thisSegmentStart = first;
         /**
          * The end of the segment being generated, will be{@code null} if less than 2 control points have been
          * defined.
          */
-        ControlPoint m_thisSegmentEnd = m_first == null ? null : m_first.m_next;
+        ControlPoint m_thisSegmentEnd = first == null ? null : first.m_next;
         /**
          * The control point location, heading, derivatives matrix for this segment of
          */
@@ -1083,12 +1101,12 @@ public class KochanekBartelsSpline {
 
         boolean m_firstPoint = true;
 
-        ScheduledActionList.ScheduledAction nextAction = m_scheduledActions.getHead();
+        ScheduledActionList.ScheduledAction nextAction = scheduledActions.getHead();
 
         PathGenerator(double speedMultiplier) {
             m_speedMultiplier = speedMultiplier;
-            if (m_first != null) {
-                m_first.pkgComputeTangentInOut();
+            if (first != null) {
+                first.pkgComputeTangentInOut();
             }
             resetSegment();
         }
@@ -1165,8 +1183,8 @@ public class KochanekBartelsSpline {
             double[] dWeights = {0.0, 0.0, 0.0, 0.0};
             for (int i = 0; i < 4; i++) {
                 for (int j = 0; j < 4; j++) {
-                    weights[i] += s[j] * m_basis[j][i];
-                    dWeights[i] += ds[j] * m_basis[j][i];
+                    weights[i] += s[j] * basis[j][i];
+                    dWeights[i] += ds[j] * basis[j][i];
                 }
             }
             // Now that we have the weights, we multiply the field positions and derivatives of the
@@ -1237,7 +1255,7 @@ public class KochanekBartelsSpline {
          */
         @Override
         public boolean hasNext() {
-            return (null != m_thisSegmentEnd) && ((m_time * m_speedMultiplier) <= m_last.m_time);
+            return (null != m_thisSegmentEnd) && ((m_time * m_speedMultiplier) <= last.m_time);
         }
 
         /**
@@ -1318,7 +1336,7 @@ public class KochanekBartelsSpline {
      * @param title The title for this curve.
      */
     public void setTitle(@NotNull String title) {
-        m_title = title;
+        this.title = title;
     }
 
     /**
@@ -1329,7 +1347,7 @@ public class KochanekBartelsSpline {
      */
     @NotNull
     public String getTitle() {
-        return m_title;
+        return title;
     }
 
     /**
@@ -1338,7 +1356,7 @@ public class KochanekBartelsSpline {
      * @param description The description for this curve.
      */
     public void setDescription(@NotNull String description) {
-        m_description = description;
+        this.description = description;
     }
 
     /**
@@ -1349,15 +1367,15 @@ public class KochanekBartelsSpline {
      */
     @NotNull
     public String getDescription() {
-        return m_description;
+        return description;
     }
 
     public void setSpeedMultiplier(double speedMultiplier) {
-        m_speedMultiplier = speedMultiplier;
+        this.speedMultiplier = speedMultiplier;
     }
 
     public double getSpeedMultiplier() {
-        return m_speedMultiplier;
+        return speedMultiplier;
     }
 
     /**
@@ -1397,7 +1415,7 @@ public class KochanekBartelsSpline {
      */
     @NotNull
     public ControlPoint addControlPoint(double fieldX, double fieldY, AngleConstantD fieldHeading) {
-        return addControlPoint(fieldX, fieldY, fieldHeading, (null == m_last) ? 0.0 : m_last.m_time + 1.0);
+        return addControlPoint(fieldX, fieldY, fieldHeading, (null == last) ? 0.0 : last.m_time + 1.0);
     }
 
     /**
@@ -1414,37 +1432,42 @@ public class KochanekBartelsSpline {
     @NotNull
     public ControlPoint addControlPoint(double fieldX, double fieldY, AngleConstantD fieldHeading, double time) {
         // make the time valid
-        if (null == m_last) {
+        if (null == last) {
             time = 0.0;
-        } else if (time <= m_last.m_time) {
-            time = m_last.m_time + 1.0;
+        } else if (time <= last.m_time) {
+            time = last.m_time + 1.0;
         }
 
         // add the point to the end of the curve
-        ControlPoint newControlPoint = new ControlPoint(time);
-        if (null == m_first) {
-            m_first = newControlPoint;
-        }
-        if (null != m_last) {
-            m_last.m_next = newControlPoint;
-            newControlPoint.m_last = m_last;
-        }
-        m_last = newControlPoint;
+        ControlPoint newControlPoint = new ControlPoint(this, time);
+        appendControlPoint(newControlPoint);
         newControlPoint.setFieldLocation(fieldX, fieldY);
         newControlPoint.setFieldHeading(new AngleD(fieldHeading));
         return newControlPoint;
+    }
+
+    private void appendControlPoint(ControlPoint newControlPoint) {
+        if (null == first) {
+            first = newControlPoint;
+        }
+        if (null != last) {
+            last.m_next = newControlPoint;
+            newControlPoint.m_last = last;
+        }
+        last = newControlPoint;
+
     }
 
     /**
      * Clear the path to an empty path with no control points.
      */
     public void clearPath() {
-        m_title = DEFAULT_TITLE;
-        m_description = DEFAULT_DESCRIPTION;
-        m_first = null;
-        m_last = null;
-        m_scheduledActions.clear();
-        m_speedMultiplier = 1.0;
+        title = DEFAULT_TITLE;
+        description = DEFAULT_DESCRIPTION;
+        first = null;
+        last = null;
+        scheduledActions.clear();
+        speedMultiplier = 1.0;
     }
 
     /**
@@ -1457,7 +1480,7 @@ public class KochanekBartelsSpline {
     @NotNull
     public ControlPoint insertControlPoint(@NotNull PathPoint pathPoint) {
         // validity testing
-        if (null == m_first) {
+        if (null == first) {
             throw new IllegalStateException("There is no path to insert control points into.");
         }
 
@@ -1465,7 +1488,7 @@ public class KochanekBartelsSpline {
         // the control point with the path point parameters so that the curve is essentially unchanged by the insertion.
 
         // Create
-        ControlPoint newControlPoint = new ControlPoint(pathPoint.time);
+        ControlPoint newControlPoint = new ControlPoint(this, pathPoint.time);
         newControlPoint.m_last = pathPoint.previousControlPoint;
         pathPoint.nextControlPoint.m_last = newControlPoint;
         newControlPoint.m_next = pathPoint.nextControlPoint;
@@ -1489,12 +1512,12 @@ public class KochanekBartelsSpline {
     @NotNull
     public ControlPoint insertControlPoint(double time) {
         // validity testing
-        if (null == m_first || m_first == m_last) {
+        if (null == first || first == last) {
             throw new IllegalStateException("There is no path to insert control points into.");
         }
         if (time <= 0.0) {
             throw new IllegalArgumentException("The time for an inserted control point must be greater than 0.0.");
-        } else if (time >= m_last.m_time) {
+        } else if (time >= last.m_time) {
             throw new IllegalArgumentException(
                     "The time for an inserted control point must be less than the time of the last point.");
         }
@@ -1524,7 +1547,7 @@ public class KochanekBartelsSpline {
             controlPoint.m_next.m_last = controlPoint.m_last;
         } else {
             // This is the last point being deleted
-            m_last = controlPoint.m_last;
+            last = controlPoint.m_last;
         }
 
         // and reset the derivatives for the surrounding points.
@@ -1539,11 +1562,11 @@ public class KochanekBartelsSpline {
     }
 
     public RobotAction scheduleCommand(double pathTime, @NotNull String command) {
-        return m_scheduledActions.scheduleAction(pathTime, command);
+        return scheduledActions.scheduleAction(pathTime, command);
     }
 
     public boolean deleteScheduledCommand(@NotNull RobotAction robotAction) {
-        return m_scheduledActions.deleteAction(robotAction);
+        return scheduledActions.deleteAction(robotAction);
     }
 
     /**
@@ -1566,7 +1589,7 @@ public class KochanekBartelsSpline {
      */
     @NotNull
     public Iterable<PathPoint> getCurveSegments() {
-        return new PathIterator(DEFAULT_PATH_DELTA, m_speedMultiplier);
+        return new PathIterator(DEFAULT_PATH_DELTA, speedMultiplier);
     }
 
     /**
@@ -1579,7 +1602,7 @@ public class KochanekBartelsSpline {
      */
     @NotNull
     public Iterable<PathPoint> getCurveSegments(double timeInterval) {
-        return new PathIterator(timeInterval, m_speedMultiplier);
+        return new PathIterator(timeInterval, speedMultiplier);
     }
 
     /**
@@ -1591,7 +1614,7 @@ public class KochanekBartelsSpline {
      */
     @NotNull
     public PathFollower getPathFollower() {
-        return new PathFollower(m_speedMultiplier);
+        return new PathFollower(speedMultiplier);
     }
 
     /**
@@ -1606,25 +1629,18 @@ public class KochanekBartelsSpline {
         try {
             // Load the path from the file.
             JSONObject path = readJsonFileAsJSONObject(filename);
-            m_title = parseString(path, TITLE, DEFAULT_TITLE);
-            m_description = parseString(path, DESCRIPTION, DEFAULT_DESCRIPTION);
-            m_speedMultiplier = parseDouble(path, SPEED_MULTIPLIER, m_speedMultiplier);
+            title = parseString(path, TITLE, DEFAULT_TITLE);
+            description = parseString(path, DESCRIPTION, DEFAULT_DESCRIPTION);
+            speedMultiplier = parseDouble(path, SPEED_MULTIPLIER, speedMultiplier);
             JSONArray controlPoints = getJSONArray(path, CONTROL_POINTS);
             for (Object cpObj : controlPoints) {
                 JSONObject cpJson = (JSONObject) cpObj;
-                ControlPoint newControlPoint = new ControlPoint(cpJson);
-                if (null == m_first) {
-                    m_first = newControlPoint;
-                }
-                if (null != m_last) {
-                    m_last.m_next = newControlPoint;
-                    newControlPoint.m_last = m_last;
-                }
-                m_last = newControlPoint;
+                ControlPoint newControlPoint = new ControlPoint(this, cpJson);
+                appendControlPoint(newControlPoint);
             }
             JSONArray scheduledActions = getJSONArray(path, ROBOT_SCHEDULED_ACTIONS, false);
             if (null != scheduledActions) {
-                m_scheduledActions.fromJson(scheduledActions);
+                this.scheduledActions.fromJson(scheduledActions);
             }
 
             // now that the points are reloaded, recompute the derivatives for any points that
@@ -1635,8 +1651,8 @@ public class KochanekBartelsSpline {
             }
             // and, the derivatives for the first point is dependent on the derivatives for
             // the latter points in the spline, so recompute that now that we have the latter points.
-            if (null != m_first) {
-                m_first.updateLocationDerivatives();
+            if (null != first) {
+                first.updateLocationDerivatives();
             }
             return true;
 
@@ -1655,9 +1671,9 @@ public class KochanekBartelsSpline {
     @SuppressWarnings("unchecked")
     public boolean savePath(@NotNull String filename) {
         JSONObject path = new JSONObject();
-        path.put(TITLE, m_title);
-        path.put(DESCRIPTION, m_description);
-        path.put(SPEED_MULTIPLIER, m_speedMultiplier);
+        path.put(TITLE, title);
+        path.put(DESCRIPTION, description);
+        path.put(SPEED_MULTIPLIER, speedMultiplier);
         JSONArray controlPoints = new JSONArray();
         path.put(CONTROL_POINTS, controlPoints);
         for (ControlPoint pt : getControlPoints()) {
@@ -1665,7 +1681,7 @@ public class KochanekBartelsSpline {
         }
         JSONArray scheduledActions = new JSONArray();
         path.put(ROBOT_SCHEDULED_ACTIONS, scheduledActions);
-        m_scheduledActions.toJson(scheduledActions);
+        this.scheduledActions.toJson(scheduledActions);
         //Write JSON file
         try (FileWriter file = new FileWriter(filename)) {
             file.write(path.toJSONString());
