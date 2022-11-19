@@ -13,9 +13,9 @@ import java.awt.geom.Point2D;
  * is {@code Ax + By + D} in the units {@code x} and {@code x} are expressed in.
  */
 public class Plane2d {
-    private final double m_A;
-    private final double m_B;
-    private final double m_D;
+    private double m_A;
+    private double m_B;
+    private double m_D;
 
     /**
      * Instantiate a 2D plane in the form {@code Ax + By + D = 0}. The A and B coefficients will be normalized.
@@ -25,12 +25,16 @@ public class Plane2d {
      * @param D The D coefficient of the plane.
      */
     public Plane2d(double A, double B, double D) {
+        setValue(A, B, D);
+    }
+
+    public Plane2d setValue(double A, double B, double D) {
         double len = Utl.length(A, B);
         m_A = A / len;
         m_B = B / len;
         m_D = D / len;
+        return this;
     }
-
     /**
      * Test whether a point is 'inside' the plane with a tolerance on what is considered inside. Note that (B,A)
      *
@@ -38,7 +42,7 @@ public class Plane2d {
      * @param tolerance The tolerance for being considered 'inside'. A positive tolerance is the extra distance from
      *                  the plane towards the inside. This is useful, for example, when testing for all of the points
      *                  of the robot being inside the field and wanting a margin of error of several cm because of
-     *                  the uncertainty in the robot position. A positive tolerance gives you are area outside the
+     *                  the uncertainty in the robot position. A positive tolerance gives you an area outside the
      *                  plane which is 'close enough' to be considered in.
      * @return {@code true} if the point is 'inside' the plane and {@code false} if the point is 'outside' the plane.
      */
