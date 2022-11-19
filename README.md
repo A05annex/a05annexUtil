@@ -1,4 +1,4 @@
-* **version:** 0.9.3
+* **version:** 0.9.4
 * **status:** released (first release version: 0.8.5)
 * **comments:** We have been using this library for robot development since December 2020, and
 believe it is ready for general use.
@@ -51,7 +51,7 @@ There are a couple paths for inclusion.
 Simply add it to the dependencies section of your `gradle.build` file as:
 ```
 dependencies {
-    implementation 'org.a05annex:a05annexUtil:0.9.3'
+    implementation 'org.a05annex:a05annexUtil:0.9.4'
      .
      .
      .
@@ -66,17 +66,18 @@ The next most simple way to use **a05annexUtil**, following the advice from this
 [chiefdelphi post](https://www.chiefdelphi.com/t/adding-my-teams-library-as-a-vendor-library/339626)
 and advises you:
 * create a `libs` folder in your robot project
-* copy the `a05annxUtil-0.9.3.jar` file from the github 0.9.3 release into that `libs` folder
+* copy the `a05annxUtil-0.9.4.jar` file from the github 0.9.4 release into that `libs` folder
 * in the dependencies section of the `build.gradle` file add the line:  
   `implementation fileTree(dir: 'libs', include: ['*.jar'])`
-* add the `libs/a05annxUtil-0.9.3.jar` to **git** so it is saved as part of your project.
+* add the `libs/a05annxUtil-0.9.4.jar` to **git** so it is saved as part of your project.
 
 The disadvantage of this method is that you must manually download the library and
 put it in your project, you also need to check for version updates.
 
 ## Release Notes
 
-* version 0.9.3 - ??-Jan-2022 - Prep for 2022 Rapid React:
+* version 0.9.4 - 18-Nov-2022 - Bug fixes, documentation, more unit testing.
+* version 0.9.3 - 11-Feb-2022 - Prep for 2022 Rapid React:
   * Made AngleD more roust and added AngleConstantD implementation.
   * KochanekBartelsSpline: bug fixes and robot actions:
     * Headings are now specified using AngleD
