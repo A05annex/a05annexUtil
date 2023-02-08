@@ -21,7 +21,7 @@ dependencies {
 
 sourceCompatibility = '1.9'
 targetCompatibility = '1.9'
-version = '0.9.4'
+version = '0.9.5'
 group = 'org.a05annex'
 
 

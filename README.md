@@ -1,4 +1,4 @@
-* **version:** 0.9.4
+* **version:** 0.9.5
 * **status:** released (first release version: 0.8.5)
 * **comments:** We have been using this library for robot development since December 2020, and
 believe it is ready for general use.
@@ -76,6 +76,7 @@ put it in your project, you also need to check for version updates.
 
 ## Release Notes
 
+* version 0.9.5 - ??-???-2023 - API for manually edited control point rotation speed.
 * version 0.9.4 - 18-Nov-2022 - Bug fixes, documentation, more unit testing.
 * version 0.9.3 - 11-Feb-2022 - Prep for 2022 Rapid React:
   * Made AngleD more roust and added AngleConstantD implementation.
