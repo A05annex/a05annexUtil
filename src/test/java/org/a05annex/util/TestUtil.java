@@ -144,4 +144,41 @@ public class TestUtil {
         assertEquals(10.0, Utl.clip(Double.MAX_VALUE, -10.0, 10.0));
         assertEquals(Double.MAX_VALUE, Utl.clip(Double.MAX_VALUE, -10.0, Double.POSITIVE_INFINITY));
     }
+
+    @Test
+    @DisplayName("Test inTolerance true")
+    public void testInToleranceTrue() {
+        // Test when the value is within the tolerance
+        assertTrue(Utl.inTolerance(5.0, 4.9, 0.1));
+        assertTrue(Utl.inTolerance(10.0, 10.05, 0.1));
+        assertTrue(Utl.inTolerance(3.0, 2.95, 0.1));
+    }
+
+    @Test
+    @DisplayName("Test inTolerance false")
+    public void testInToleranceFalse() {
+        // Test when the value is not within the tolerance
+        assertFalse(Utl.inTolerance(5.0, 4.9, 0.05));
+        assertFalse(Utl.inTolerance(10.0, 10.05, 0.01));
+        assertFalse(Utl.inTolerance(3.0, 2.95, 0.001));
+    }
+
+    @Test
+    @DisplayName("Test inTolerance with 0 tolerance")
+    public void testInToleranceZeroTolerance() {
+        // Test when the tolerance is zero
+        assertFalse(Utl.inTolerance(5.0, 4.9, 0.0));
+        assertFalse(Utl.inTolerance(10.0, 10.05, 0.0));
+        assertFalse(Utl.inTolerance(3.0, 2.95, 0.0));
+        assertTrue(Utl.inTolerance(10.01, 10.01, 0.0));
+    }
+
+    @Test
+    @DisplayName("Test inTolerance with negative values")
+    public void testInToleranceNegativeValues() {
+        // Test when the value and/or target are negative
+        assertTrue(Utl.inTolerance(-5.0, -4.9, 0.1));
+        assertTrue(Utl.inTolerance(-10.0, -10.05, 0.1));
+        assertTrue(Utl.inTolerance(-3.0, -2.95, 0.1));
+    }
 }

@@ -103,4 +103,15 @@ public final class Utl {
         }
         return Math.min(Math.max(value, min), max);
     }
+
+    /**
+     Determines if a given value is within a certain tolerance of a target value.
+     @param value the value to compare with the target value
+     @param target the target value to compare against
+     @param tolerance the maximum amount by which the value may differ from the target value and still be considered "within tolerance"
+     @return true if the absolute difference between the value and target is less than or equal to the tolerance, false otherwise
+     */
+    public static boolean inTolerance(double value, double target, double tolerance) {
+        return Math.abs(value - target) <= tolerance;
+    }
 }
