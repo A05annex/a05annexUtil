@@ -76,7 +76,9 @@ put it in your project, you also need to check for version updates.
 
 ## Release Notes
 
-* version 0.9.5 - ??-???-2023 - API for manually edited control point rotation speed.
+* version 0.9.6 - 04-May-2023 - Added `Utl.inTolerance(...)` method for testing whether a value
+  is within a specified tolerance of a target.
+* version 0.9.5 - 07-Feb-2023 - API for manually edited control point rotation speed.
 * version 0.9.4 - 18-Nov-2022 - Bug fixes, documentation, more unit testing.
 * version 0.9.3 - 11-Feb-2022 - Prep for 2022 Rapid React:
   * Made AngleD more roust and added AngleConstantD implementation.
