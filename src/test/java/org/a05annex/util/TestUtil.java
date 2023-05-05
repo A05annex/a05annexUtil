@@ -148,10 +148,15 @@ public class TestUtil {
     @Test
     @DisplayName("Test inTolerance true")
     public void testInToleranceTrue() {
-        // Test when the value is within the tolerance
-        assertTrue(Utl.inTolerance(5.0, 4.9, 0.1));
-        assertTrue(Utl.inTolerance(10.0, 10.05, 0.1));
-        assertTrue(Utl.inTolerance(3.0, 2.95, 0.1));
+        // Test when the value is within the tolerance - NOTE: the tolerance value has an .000000001 value added to
+        // account for the very small representational round-off error when the specified value and target are
+        // converted to doubles.
+        assertTrue(Utl.inTolerance(5.0, 4.9, 0.100000001));
+        assertTrue(Utl.inTolerance(4.8, 4.9, 0.100000001));
+        assertTrue(Utl.inTolerance(10.0, 10.05, 0.100000001));
+        assertTrue(Utl.inTolerance(10.1, 10.05, 0.100000001));
+        assertTrue(Utl.inTolerance(3.0, 2.95, 0.100000001));
+        assertTrue(Utl.inTolerance(2.9, 2.95, 0.100000001));
     }
 
     @Test
@@ -159,8 +164,11 @@ public class TestUtil {
     public void testInToleranceFalse() {
         // Test when the value is not within the tolerance
         assertFalse(Utl.inTolerance(5.0, 4.9, 0.05));
+        assertFalse(Utl.inTolerance(4.8, 4.9, 0.05));
         assertFalse(Utl.inTolerance(10.0, 10.05, 0.01));
+        assertFalse(Utl.inTolerance(10.1, 10.05, 0.01));
         assertFalse(Utl.inTolerance(3.0, 2.95, 0.001));
+        assertFalse(Utl.inTolerance(2.9, 2.95, 0.001));
     }
 
     @Test
@@ -176,9 +184,14 @@ public class TestUtil {
     @Test
     @DisplayName("Test inTolerance with negative values")
     public void testInToleranceNegativeValues() {
-        // Test when the value and/or target are negative
-        assertTrue(Utl.inTolerance(-5.0, -4.9, 0.1));
-        assertTrue(Utl.inTolerance(-10.0, -10.05, 0.1));
-        assertTrue(Utl.inTolerance(-3.0, -2.95, 0.1));
+        // Test when the value and/or target are negative - NOTE: the tolerance value has an .000000001 value added to
+        // account for the very small representational round-off error when the specified value and target are
+        // converted to doubles.
+        assertTrue(Utl.inTolerance(-5.0, -4.9, 0.100000001));
+        assertTrue(Utl.inTolerance(-4.8, -4.9, 0.100000001));
+        assertTrue(Utl.inTolerance(-10.0, -10.05, 0.100000001));
+        assertTrue(Utl.inTolerance(-10.1, -10.05, 0.100000001));
+        assertTrue(Utl.inTolerance(-3.0, -2.95, 0.100000001));
+        assertTrue(Utl.inTolerance(-2.9, -2.95, 0.100000001));
     }
 }
