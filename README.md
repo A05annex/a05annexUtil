@@ -1,4 +1,4 @@
-* **version:** 0.9.5
+* **version:** 0.9.6
 * **status:** released (first release version: 0.8.5)
 * **comments:** We have been using this library for robot development since December 2020, and
 believe it is ready for general use.
