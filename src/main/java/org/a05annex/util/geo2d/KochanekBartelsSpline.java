@@ -843,9 +843,20 @@ public class KochanekBartelsSpline {
          */
         public void setHeadingLocation(Point2D pt) {
             // OK, the simple action here is to look at the current mouse position relative to the control
-            // point position, use the atan2, and get a heading. However, tis does not handle the -180/180 degree
-            // transition, so we need some logic like the NavX logic. for passing over the boundary
-            setFieldHeading(new AngleD().atan2(pt.getX() - m_fieldX, pt.getY() - m_fieldY));
+            // point position, use the atan2, and get a heading. However, this does not handle the -180/180 degree
+            // transition, so we need some logic like the NavX logic. for passing over the boundary.
+            //
+            // Since this is being set by interactive editing the interaction can't put in a half rotation in one
+            // step, so if the difference is greater than +-MATH.PI, we need to correct (and there may be multiple
+            // rotations to correct for.
+            AngleD adjustedHeading = new AngleD().atan2(pt.getX() - m_fieldX, pt.getY() - m_fieldY);
+            while ((adjustedHeading.getRadians() - m_fieldHeading.getRadians()) > Math.PI) {
+                adjustedHeading.subtract(AngleD.TWO_PI);
+            }
+            while ((adjustedHeading.getRadians() - m_fieldHeading.getRadians()) < -Math.PI) {
+                adjustedHeading.add(AngleD.TWO_PI);
+            }
+            setFieldHeading(adjustedHeading);
         }
 
         /**
@@ -854,14 +865,7 @@ public class KochanekBartelsSpline {
          * @param heading (AngleConstantD) The heading direction for this control point.
          */
         public void setFieldHeading(AngleConstantD heading) {
-            AngleD adjustedHeading = new AngleD(heading);
-            while ((adjustedHeading.getRadians() - m_fieldHeading.getRadians()) > Math.PI) {
-                adjustedHeading.subtract(AngleD.TWO_PI);
-            }
-            while ((adjustedHeading.getRadians() - m_fieldHeading.getRadians()) < -Math.PI) {
-                adjustedHeading.add(AngleD.TWO_PI);
-            }
-            m_fieldHeading = adjustedHeading;
+            m_fieldHeading = new AngleD(heading);
             // update the derivatives
             updateHeadingDerivative();
             if (m_last != null) {
