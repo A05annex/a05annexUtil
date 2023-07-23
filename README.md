@@ -76,14 +76,18 @@ put it in your project, you also need to check for version updates.
 
 ## Release Notes
 
-* version 0.9.6 - 04-May-2023 - Added `Utl.inTolerance(...)` method for testing whether a value
-  is within a specified tolerance of a target.
+* version 0.9.6 - 04-May-2023 - 2023 Charged Up season and post season improvements:
+  * Added `Utl.inTolerance(...)` method for testing whether a value is within a specified tolerance
+    of a target value.
+  * Fixed an issue in explicit specification of path control point headings where the detection/correction of
+    interactively edited headings for the &plusmn;180&deg; boundary was being applied to headings explicitly set
+    in a control point dialog box, which could corrupt the value being set.
 * version 0.9.5 - 07-Feb-2023 - API for manually edited control point rotation speed.
 * version 0.9.4 - 18-Nov-2022 - Bug fixes, documentation, more unit testing.
 * version 0.9.3 - 11-Feb-2022 - Prep for 2022 Rapid React:
-  * Made AngleD more roust and added AngleConstantD implementation.
-  * KochanekBartelsSpline: bug fixes and robot actions:
-    * Headings are now specified using AngleD
+  * Made <code>AngleD</code> more robust and added <code>AngleConstantD</code> implementation.
+  * <code>KochanekBartelsSpline</code>: bug fixes and robot actions:
+    * Headings are now specified using <code>AngleD</code>
     * When derivatives for control points adjacent to the start and end control points were
       set to zero this would generate a divide by zero condition that broke the path between
       the adjacent point and the start or end point. This has been fixed.
