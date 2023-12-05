@@ -23,7 +23,7 @@ used regardless of the FTC/FRC base platform libraries and/or hardware.
   * **`Line3d`** - an explicit parametric 3d line.
   * **`PackageContents`** - the constants and test for *close enough* to be considered
     zero (`0.0`). Used in matrix singularity and zero length vector normalization
-  * checks.
+    checks.
   * **`Plane3d`** - and implicit 3d plane.
   * **`Point3d`** - a 3d point.
   * **`SingularMatrixException`** - An exception thrown when a singular matrix is inverted.
@@ -51,7 +51,7 @@ There are a couple paths for inclusion.
 Simply add it to the dependencies section of your `gradle.build` file as:
 ```
 dependencies {
-    implementation 'org.a05annex:a05annexUtil:0.9.4'
+    implementation 'org.a05annex:a05annexUtil:0.9.6'
      .
      .
      .
@@ -66,17 +66,17 @@ The next most simple way to use **a05annexUtil**, following the advice from this
 [chiefdelphi post](https://www.chiefdelphi.com/t/adding-my-teams-library-as-a-vendor-library/339626)
 and advises you:
 * create a `libs` folder in your robot project
-* copy the `a05annxUtil-0.9.4.jar` file from the github 0.9.4 release into that `libs` folder
+* copy the `a05annxUtil-0.9.6.jar` file from the github 0.9.6 release into that `libs` folder
 * in the dependencies section of the `build.gradle` file add the line:  
   `implementation fileTree(dir: 'libs', include: ['*.jar'])`
-* add the `libs/a05annxUtil-0.9.4.jar` to **git** so it is saved as part of your project.
+* add the `libs/a05annxUtil-0.9.6.jar` to **git** so it is saved as part of your project.
 
 The disadvantage of this method is that you must manually download the library and
 put it in your project, you also need to check for version updates.
 
 ## Release Notes
 
-* version 0.9.6 - 04-May-2023 - 2023 Charged Up season and post season improvements:
+* version 0.9.6 - 05-Dec-2023 - 2023 Charged Up season and post season improvements:
   * Added `Utl.inTolerance(...)` method for testing whether a value is within a specified tolerance
     of a target value.
   * Fixed an issue in explicit specification of path control point headings where the detection/correction of
