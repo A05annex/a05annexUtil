@@ -36,9 +36,15 @@ class TestSetOnce {
 		TestStaticInstance.resetStaticField();
 	}
 
+	// Helper method to create instance
+	private TestInstance createInstance() {
+		return new TestInstance();
+	}
+
+	// Test instance field set
 	@Test
 	void testSetOnceSuccessful() {
-		TestInstance instance = new TestInstance();
+		TestInstance instance = createInstance();
 		String value = "testValue";
 
 		String result = Utl.setOnce(value, instance);
@@ -48,14 +54,14 @@ class TestSetOnce {
 		assertEquals(value, instance.getField(), "The field should equal the provided value.");
 	}
 
+	// Test if exception is thrown when the field is already set
 	@Test
 	void testSetOnceThrowsIfFieldAlreadySet() {
-		TestInstance instance = new TestInstance();
-		instance.field = "existingValue";
+		TestInstance instance = createInstance();
+		instance.field = "existingValue"; // Pre-set the field
 		String value = "newValue";
 
-		IllegalStateException exception = assertThrows(
-				IllegalStateException.class,
+		IllegalStateException exception = assertThrows(IllegalStateException.class,
 				() -> Utl.setOnce(value, instance),
 				"Setting a field more than once should throw an IllegalStateException."
 		);
@@ -64,12 +70,12 @@ class TestSetOnce {
 				"The exception message should indicate that the field was set more than once.");
 	}
 
+	// Test if exception is thrown when no suitable field exists
 	@Test
 	void testSetOnceThrowsIfNoFieldIsSuitable() {
-		TestInstance instance = new TestInstance();
+		TestInstance instance = createInstance();
 
-		IllegalStateException exception = assertThrows(
-				IllegalStateException.class,
+		IllegalStateException exception = assertThrows(IllegalStateException.class,
 				() -> Utl.setOnce(123, instance),
 				"Setting a value that doesn't match any field type should throw an IllegalStateException."
 		);
@@ -78,6 +84,7 @@ class TestSetOnce {
 				"The exception message should indicate that no suitable field was found.");
 	}
 
+	// Test static field set
 	@Test
 	void testStaticSetOnceSuccessful() {
 		String value = "staticTestValue";
@@ -90,13 +97,13 @@ class TestSetOnce {
 				"The static field should equal the provided value.");
 	}
 
+	// Test if exception is thrown for static field already set
 	@Test
 	void testStaticSetOnceThrowsIfFieldAlreadySet() {
-		TestStaticInstance.staticField = "existingStaticValue";
+		TestStaticInstance.staticField = "existingStaticValue"; // Pre-set the static field
 		String value = "newStaticValue";
 
-		IllegalStateException exception = assertThrows(
-				IllegalStateException.class,
+		IllegalStateException exception = assertThrows(IllegalStateException.class,
 				() -> Utl.setOnce(value, TestStaticInstance.class),
 				"Setting a static field more than once should throw an IllegalStateException."
 		);
@@ -105,15 +112,29 @@ class TestSetOnce {
 				"The exception message should indicate that the field was set more than once.");
 	}
 
+	// Test if exception is thrown for no suitable static field
 	@Test
 	void testStaticSetOnceThrowsIfNoFieldIsSuitable() {
-		IllegalStateException exception = assertThrows(
-				IllegalStateException.class,
+		IllegalStateException exception = assertThrows(IllegalStateException.class,
 				() -> Utl.setOnce(123, TestStaticInstance.class),
 				"Setting a value that doesn't match any static field type should throw an IllegalStateException."
 		);
 
 		assertTrue(exception.getMessage().contains("No suitable static variable"),
 				"The exception message should indicate that no suitable static field was found.");
+	}
+
+	// Test if an attempt to set a field of incompatible type throws an exception
+	@Test
+	void testSetOnceThrowsIfIncompatibleType() {
+		TestInstance instance = createInstance();
+
+		IllegalStateException exception = assertThrows(IllegalStateException.class,
+				() -> Utl.setOnce(123, instance),
+				"Setting a field with an incompatible type should throw an IllegalStateException."
+		);
+
+		assertTrue(exception.getMessage().contains("No suitable variable"),
+				"The exception message should indicate that no suitable field was found.");
 	}
 }
