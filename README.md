@@ -1,4 +1,4 @@
-* **version:** 0.9.4
+* **version:** 0.9.6
 * **status:** released (first release version: 0.8.5)
 * **comments:** We have been using this library for robot development since December 2020, and
 believe it is ready for general use.
@@ -23,7 +23,7 @@ used regardless of the FTC/FRC base platform libraries and/or hardware.
   * **`Line3d`** - an explicit parametric 3d line.
   * **`PackageContents`** - the constants and test for *close enough* to be considered
     zero (`0.0`). Used in matrix singularity and zero length vector normalization
-  * checks.
+    checks.
   * **`Plane3d`** - and implicit 3d plane.
   * **`Point3d`** - a 3d point.
   * **`SingularMatrixException`** - An exception thrown when a singular matrix is inverted.
@@ -51,7 +51,7 @@ There are a couple paths for inclusion.
 Simply add it to the dependencies section of your `gradle.build` file as:
 ```
 dependencies {
-    implementation 'org.a05annex:a05annexUtil:0.9.4'
+    implementation 'org.a05annex:a05annexUtil:0.9.6'
      .
      .
      .
@@ -66,21 +66,28 @@ The next most simple way to use **a05annexUtil**, following the advice from this
 [chiefdelphi post](https://www.chiefdelphi.com/t/adding-my-teams-library-as-a-vendor-library/339626)
 and advises you:
 * create a `libs` folder in your robot project
-* copy the `a05annxUtil-0.9.4.jar` file from the github 0.9.4 release into that `libs` folder
+* copy the `a05annxUtil-0.9.6.jar` file from the github 0.9.6 release into that `libs` folder
 * in the dependencies section of the `build.gradle` file add the line:  
   `implementation fileTree(dir: 'libs', include: ['*.jar'])`
-* add the `libs/a05annxUtil-0.9.4.jar` to **git** so it is saved as part of your project.
+* add the `libs/a05annxUtil-0.9.6.jar` to **git** so it is saved as part of your project.
 
 The disadvantage of this method is that you must manually download the library and
 put it in your project, you also need to check for version updates.
 
 ## Release Notes
 
+* version 0.9.6 - 05-Dec-2023 - 2023 Charged Up season and post season improvements:
+  * Added `Utl.inTolerance(...)` method for testing whether a value is within a specified tolerance
+    of a target value.
+  * Fixed an issue in explicit specification of path control point headings where the detection/correction of
+    interactively edited headings for the &plusmn;180&deg; boundary was being applied to headings explicitly set
+    in a control point dialog box, which could corrupt the value being set.
+* version 0.9.5 - 07-Feb-2023 - API for manually edited control point rotation speed.
 * version 0.9.4 - 18-Nov-2022 - Bug fixes, documentation, more unit testing.
 * version 0.9.3 - 11-Feb-2022 - Prep for 2022 Rapid React:
-  * Made AngleD more roust and added AngleConstantD implementation.
-  * KochanekBartelsSpline: bug fixes and robot actions:
-    * Headings are now specified using AngleD
+  * Made <code>AngleD</code> more robust and added <code>AngleConstantD</code> implementation.
+  * <code>KochanekBartelsSpline</code>: bug fixes and robot actions:
+    * Headings are now specified using <code>AngleD</code>
     * When derivatives for control points adjacent to the start and end control points were
       set to zero this would generate a divide by zero condition that broke the path between
       the adjacent point and the start or end point. This has been fixed.

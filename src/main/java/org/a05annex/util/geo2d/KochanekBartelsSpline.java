@@ -80,6 +80,7 @@ public class KochanekBartelsSpline {
     static final String LOCATION_DERIVATIVES_EDITED = "derivativesEdited";
     static final String FIELD_dX = "field_dX";
     static final String FIELD_dY = "field_dY";
+    static final String HEADING_DERIVATIVE_EDITED = "headingDerivativeEdited";
     static final String FIELD_dHEADING = "field_dHeading";
     static final String ROBOT_ACTION_COMMAND = "robotActionCommand";
     static final String ROBOT_ACTION_DURATION = "robotActionDuration";
@@ -467,11 +468,16 @@ public class KochanekBartelsSpline {
         double m_fieldY = 0.0;
         AngleD m_fieldHeading = new AngleD(AngleD.ZERO);
         double m_time;
-        // Have the location derivatives been edited? If so, then the user has explicitly set the derivatives,
-        //  and they must be maintained, otherwise, derivatives are recomputed as control points are moved around.
+        /**
+         * {@code true} if the location derivatives (the speeds) have been edited either by dragging editing
+         * points or setting derivatives through a dialogue; {@code false} otherwise. If the location derivatives
+         * were edited, then the user has explicitly set the derivatives, and those settings will be maintained,
+         * during position editing; otherwise, derivatives are recomputed as control points are moved around.
+         */
         boolean m_locationDerivativesEdited = false;
         double m_dX = 0.0;
         double m_dY = 0.0;
+        boolean m_headingDerivativeEdited = false;
         double m_dHeading = 0.0;
         // This is a robot action to stop at this control point and do something
         String m_robotAction = null;
@@ -513,6 +519,7 @@ public class KochanekBartelsSpline {
             m_dX = parseDouble(json, FIELD_dX, 0.0);
             m_dY = parseDouble(json, FIELD_dY, 0.0);
             m_dHeading = parseDouble(json, FIELD_dHEADING, 0.0);
+            m_headingDerivativeEdited = parseBoolean(json, HEADING_DERIVATIVE_EDITED, false);
             m_robotAction = parseString(json, ROBOT_ACTION_COMMAND, null);
             m_actionDuration = parseDouble(json, ROBOT_ACTION_DURATION, 0.0);
         }
@@ -533,6 +540,7 @@ public class KochanekBartelsSpline {
             controlPoint.put(FIELD_dX, m_dX);
             controlPoint.put(FIELD_dY, m_dY);
             controlPoint.put(FIELD_dHEADING, m_dHeading);
+            controlPoint.put(HEADING_DERIVATIVE_EDITED, m_headingDerivativeEdited);
             if (null != m_robotAction) {
                 controlPoint.put(ROBOT_ACTION_COMMAND, m_robotAction);
                 controlPoint.put(ROBOT_ACTION_DURATION, m_actionDuration);
@@ -567,8 +575,9 @@ public class KochanekBartelsSpline {
          * control points are moved. This only effects points whose derivatives have been manually edited.
          */
         public void resetDerivative() {
-            if (m_locationDerivativesEdited) {
+            if (m_locationDerivativesEdited || m_headingDerivativeEdited) {
                 m_locationDerivativesEdited = false;
+                m_headingDerivativeEdited = false;
                 updateLocationDerivatives();
                 updateHeadingDerivative();
             }
@@ -584,6 +593,13 @@ public class KochanekBartelsSpline {
             return m_locationDerivativesEdited;
         }
 
+        /**
+         * Test whether the heading derivative (speed of rotation) has been manually edited.
+         * @return {@code true} if the spped of rotation has been manually edited, {@code false} otherwise.
+         */
+        public boolean getHeadingDerivativeManuallyEdited() {
+            return m_headingDerivativeEdited;
+        }
         /**
          * Get the field X position of the control point.
          *
@@ -827,9 +843,20 @@ public class KochanekBartelsSpline {
          */
         public void setHeadingLocation(Point2D pt) {
             // OK, the simple action here is to look at the current mouse position relative to the control
-            // point position, use the atan2, and get a heading. However, tis does not handle the -180/180 degree
-            // transition, so we need some logic like the NavX logic. for passing over the boundary
-            setFieldHeading(new AngleD().atan2(pt.getX() - m_fieldX, pt.getY() - m_fieldY));
+            // point position, use the atan2, and get a heading. However, this does not handle the -180/180 degree
+            // transition, so we need some logic like the NavX logic. for passing over the boundary.
+            //
+            // Since this is being set by interactive editing the interaction can't put in a half rotation in one
+            // step, so if the difference is greater than +-MATH.PI, we need to correct (and there may be multiple
+            // rotations to correct for.
+            AngleD adjustedHeading = new AngleD().atan2(pt.getX() - m_fieldX, pt.getY() - m_fieldY);
+            while ((adjustedHeading.getRadians() - m_fieldHeading.getRadians()) > Math.PI) {
+                adjustedHeading.subtract(AngleD.TWO_PI);
+            }
+            while ((adjustedHeading.getRadians() - m_fieldHeading.getRadians()) < -Math.PI) {
+                adjustedHeading.add(AngleD.TWO_PI);
+            }
+            setFieldHeading(adjustedHeading);
         }
 
         /**
@@ -838,14 +865,7 @@ public class KochanekBartelsSpline {
          * @param heading (AngleConstantD) The heading direction for this control point.
          */
         public void setFieldHeading(AngleConstantD heading) {
-            AngleD adjustedHeading = new AngleD(heading);
-            while ((adjustedHeading.getRadians() - m_fieldHeading.getRadians()) > Math.PI) {
-                adjustedHeading.subtract(AngleD.TWO_PI);
-            }
-            while ((adjustedHeading.getRadians() - m_fieldHeading.getRadians()) < -Math.PI) {
-                adjustedHeading.add(AngleD.TWO_PI);
-            }
-            m_fieldHeading = adjustedHeading;
+            m_fieldHeading = new AngleD(heading);
             // update the derivatives
             updateHeadingDerivative();
             if (m_last != null) {
@@ -856,27 +876,54 @@ public class KochanekBartelsSpline {
             }
         }
 
+        /** Get the rotation speed for the control point.
+         *
+         * @return The rotation speed (radians/sec).
+         */
+        public double getRotationSpeed() {
+            return m_dHeading;
+        }
+
+        /**
+         * Set the rotation speed for the control point.
+         *
+         * @param rotationSpeed The rotation speed (radians/sec)
+         */
+        public void setRotationSpeed(double rotationSpeed) {
+            m_dHeading = rotationSpeed;
+            m_headingDerivativeEdited = true;
+            // update the derivatives
+            updateHeadingDerivative();
+            if (m_last != null) {
+                m_last.updateHeadingDerivative();
+            }
+            if (m_next != null) {
+                m_next.updateHeadingDerivative();
+            }
+
+        }
         /**
          *
          */
         private void updateHeadingDerivative() {
-            // this is a bit different than the path field position derivative because the path derivative
-            // is displayed and editable - until we figure out how to do that with the heading derivative
-            // we need to figure out how to best handle the first and last point.
-            if ((null == m_last) && (null == m_next)) {
-                m_dHeading = 0.0;
-            } else {
-                double fieldHeadingPrev = m_last != null ?
+            if (!m_headingDerivativeEdited) {
+                // similarly to speeds, if rotation has been manually set, we don't recompute it,
+                // otherwise we recompute to try to keep dragging behaviour as intuitive as possible.
+                if ((null == m_last) && (null == m_next)) {
+                    m_dHeading = 0.0;
+                } else {
+                    double fieldHeadingPrev = m_last != null ?
 //                        last.m_fieldHeading : m_fieldHeading - (m_next.m_fieldHeading - m_fieldHeading);
-                        m_last.m_fieldHeading.getRadians() :
-                        m_fieldHeading.getRadians() -
-                                (m_next.m_fieldHeading.getRadians() - m_fieldHeading.getRadians());
-                double fieldHeadingNext = m_next != null ?
+                            m_last.m_fieldHeading.getRadians() :
+                            m_fieldHeading.getRadians() -
+                                    (m_next.m_fieldHeading.getRadians() - m_fieldHeading.getRadians());
+                    double fieldHeadingNext = m_next != null ?
 //                        m_next.m_fieldHeading : m_fieldHeading + (m_fieldHeading - last.m_fieldHeading);
-                        m_next.m_fieldHeading.getRadians() :
-                        m_fieldHeading.getRadians() +
-                                (m_fieldHeading.getRadians() - m_last.m_fieldHeading.getRadians());
-                m_dHeading = DEFAULT_HEADING_TENSION * (fieldHeadingNext - fieldHeadingPrev);
+                            m_next.m_fieldHeading.getRadians() :
+                            m_fieldHeading.getRadians() +
+                                    (m_fieldHeading.getRadians() - m_last.m_fieldHeading.getRadians());
+                    m_dHeading = DEFAULT_HEADING_TENSION * (fieldHeadingNext - fieldHeadingPrev);
+                }
             }
         }
 
