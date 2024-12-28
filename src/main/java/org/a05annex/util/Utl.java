@@ -1,5 +1,7 @@
 package org.a05annex.util;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
@@ -7,32 +9,6 @@ import java.lang.reflect.Modifier;
  * This is a utility class with some commonly used math constants and utility methods
  */
 public final class Utl {
-
-//    /**
-//     * Set to the value of {@link java.lang.Math#PI}, or {@code 180}&deg;, for convenience only - we are
-//     * already including all of the constants from this class.
-//     */
-//    public static final double PI = Math.PI;
-//    /**
-//     * Set to the value of {@code -}{@link java.lang.Math#PI}, or {@code 180}&deg;, because we use this a
-//     * lot in swerve drive code.
-//     */
-//    public static final double NEG_PI = -Math.PI;
-//    /**
-//     * Set to the value of {@code (}{@link java.lang.Math#PI}{@code  * 2,0)}, or {@code 360}&deg;, because we use
-//     * this a lot in swerve drive code.
-//     */
-//    public static final double TWO_PI = Math.PI * 2.0;
-//    /**
-//     * Set to the value of {@code (}{@link java.lang.Math#PI}{@code  * 0.5)}, or {@code 90}&deg;, because we use
-//     * this a lot in swerve drive code.
-//     */
-//    public static final double PI_OVER_2 = Math.PI * 0.5;
-//    /**
-//     * Set to the value of {@code -(}{@link java.lang.Math#PI}{@code  * 0.5)}, or {@code -90}&deg;, because
-//     * we use this a lot in swerve drive code.
-//     */
-//    public static final double NEG_PI_OVER_2 = -(Math.PI * 0.5);
 
     /**
      * This class is all static constants and methods, it cannot be instantiated.
@@ -127,38 +103,46 @@ public final class Utl {
      * use {@link #setOnce(Object, Class)}.
      *
      * @param <T>      The type of the value being set.
-     * @param newValue The value to set in the target object. It must match the type of
-     *                 the target field.
      * @param instance The object instance whose field is to be set. The instance's fields
-     *                 will be inspected for a field assignable from the type of newValue.
+     *                 will be inspected for a field named {@code fieldName} assignable from the type of
+     *                 {@code newValue}.
+     * @param fieldName The name of the field you want to set.
+     * @param newValue The value to set in the {@code instance} and {@code fieldName}. It must match the type of
+     *                 {@code fieldName}.
      * @return The value that was successfully set in the instance.
      * @throws IllegalStateException If a suitable field in the instance is already set,
      *                               if no suitable field exists, or if there is an error
      *                               accessing instance fields.
      */
-    public static <T> T setOnce(T newValue, Object instance) {
+    public static <T> T setOnce(@NotNull Object instance, String fieldName, @NotNull T newValue) {
         try {
             // Step 1: Loop over instance fields for the given object
             for(Field field : instance.getClass().getDeclaredFields()) {
-                field.setAccessible(true);
-
-                // Check if field is already set
-                Object currentValue = field.get(instance);
-                if(currentValue != null) {
-                    throw new IllegalStateException("You tried to set the variable \"" + field.getName() + "\" more than once");
-                }
-
-                // If field matches the newValue's type, set it
-                if(newValue != null && field.getType().isAssignableFrom(newValue.getClass())) {
-                    field.set(instance, newValue); // Set instance field value
-                    return newValue;
+                String thisFieldName = field.getName();
+                // Step 2: find the matching field name
+                if (fieldName.equals(thisFieldName)) {
+                    // Step 3: found the right field, now set it if it has not already been set.
+                    // Make the field accessible - which gets past private and final declarations
+                    field.setAccessible(true);
+                    // Check if field is already set
+                    Object currentValue = field.get(instance);
+                    if (currentValue != null) {
+                        throw new IllegalStateException(String.format("The field '%s' is already set", fieldName));
+                    }
+                    // If field matches the newValue's type, set it; otherwise tell the user there is bad code.
+                    if (field.getType().isAssignableFrom(newValue.getClass())) {
+                        field.set(instance, newValue); // Set instance field value
+                        return newValue;
+                    } else {
+                        throw new IllegalArgumentException(String.format("Field '%s' cannot be set to a '%s'",
+                                fieldName, newValue.getClass().getName()));
+                    }
                 }
             }
         } catch (IllegalAccessException e) {
-            throw new IllegalStateException("Failed to access instance fields", e);
+            throw new IllegalStateException(String.format("Failed to access instance field '%s'",fieldName), e);
         }
-
-        throw new IllegalStateException("No suitable variable was found to set.");
+        throw new IllegalArgumentException(String.format("No field '%s' found",fieldName));
     }
 
     /**
@@ -167,7 +151,7 @@ public final class Utl {
      * already has a non-null value, an exception is thrown to prevent overwriting.
      * <p>
      * This method is for setting **static variables** only. For setting instance variables,
-     * use {@link #setOnce(Object, Object)}.
+     * use {@link #setOnce(Object, String, Object)}.
      *
      * @param <T>      The type of the value to be set.
      * @param newValue The new value to be assigned to the static field.
