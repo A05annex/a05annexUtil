@@ -1,6 +1,7 @@
 package org.a05annex.util;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -110,9 +111,9 @@ public final class Utl {
      * @param newValue The value to set in the {@code instance} and {@code fieldName}. It must match the type of
      *                 {@code fieldName}.
      * @return The value that was successfully set in the instance.
-     * @throws IllegalStateException If a suitable field in the instance is already set,
-     *                               if no suitable field exists, or if there is an error
-     *                               accessing instance fields.
+     * @throws IllegalArgumentException Thrown if a field named {@code fieldName} was not found, or if the
+     *                                  {@code newValue} type could not be used as the value for {@code fieldName}.
+     * @throws IllegalStateException Thrown if {@code fieldName} has already been set.
      */
     public static <T> T setOnce(@NotNull Object instance, String fieldName, @NotNull T newValue) {
         try {
@@ -188,5 +189,73 @@ public final class Utl {
         }
 
         throw new IllegalStateException("No suitable static variable was found to set.");
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // Instantiation by reflection - we are finding increasingly more cases where we are writing library code that
+    // implements extensibility through reflection. For example, our path planning software lets the user specify
+    // commands to be run by command class name and arguments - but it has no access to the actual robot code it only
+    // knows the command class and arguments. In the robot library, the command that runs the path knows about the wpi
+    // library code structure - but doesn't know what has been programmed for this year's robot, so it needs to make
+    // sure and instantiated object is (perhaps) an instance of a library type, or, implements some library interfaces.
+    //
+    // The next couple methods implement reflection instantiation of both a no-argument constructor, and a constructor
+    // with arguments, with checks that the constructed object is of the expected type and implements the
+    // expected interfaces.
+    // -----------------------------------------------------------------------------------------------------------------
+    /**
+     * Instantiate an object using a constructor with a specified argument signature and initial values.
+     * @param <T>       The type object we are expecting to instantiate. Note, this may be a base class extended by
+     *                  {@code clazzName} or an interface implemented by {@code clazzName}
+     * @param returnClazz The class of type {@code <T>}.
+     * @param clazzName The fully qualified object class name.
+     * @param parameterTypes An array of the object classes for constructor arguments.
+     * @param instArgs An array of the values for constructor arguments.
+     * @return Returns the instantiated object, or {@code null} if the object could not be instantiated.
+     */
+    public static <T> T instantiateObjectFromName(@NotNull Class<T> returnClazz, @NotNull String clazzName,
+                                                  @NotNull Class<?>[] parameterTypes, @NotNull Object[] instArgs) {
+        try {
+            Object obj = null;
+            Class clazz = Class.forName(clazzName);
+            if (parameterTypes.length != instArgs.length) {
+                System.out.printf("Could not instantiate object: class='%s':\n", clazzName);
+                System.out.printf("  'parameterTypes' list length (%d) is not equal to 'instArgs' length (%d)\n",
+                        parameterTypes.length, instArgs.length);
+                return null;
+            } else if (0 == parameterTypes.length) {
+                obj = clazz.getDeclaredConstructor().newInstance();
+            } else {
+                obj = clazz.getDeclaredConstructor(parameterTypes).newInstance(instArgs);
+            }
+            return returnClazz.cast(obj);
+        } catch (final ClassCastException t) {
+            System.out.printf("Could not instantiate object: class='%s' as a '%s'\n",
+                    clazzName, returnClazz.getCanonicalName());
+        } catch (final ClassNotFoundException t) {
+            System.out.printf("Could not instantiate object: class='%s'; class not found.\n", clazzName);
+        } catch (final NoSuchMethodException t) {
+            System.out.printf(
+                    "Could not instantiate object: class='%s'; no constructor matching the 'parameterTypes'.\n",
+                    clazzName);
+        } catch (final IllegalArgumentException t) {
+            System.out.printf(
+                    "Could not instantiate object: class='%s'; the 'instArgs' types do not match the 'parameterTypes'.\n",
+                    clazzName);
+        } catch (final Exception t) {
+            System.out.printf("Could not instantiate object: class='%s' - no details.\n", clazzName);
+        }
+        return null;
+    }
+    /**
+     * Instantiate an object using the default no argument constructor
+     * @param <T>       The type object we are expecting to instantiate. Note, this may be a base class extended by
+     *                  {@code clazzName} or an interface implemented by {@code clazzName}
+     * @param returnClazz The class of type {@code <T>}.
+     * @param clazzName The fully qualified object class name.
+     * @return Returns the instantiated object, or {@code null} if the object could not be instantiated.
+     */
+    public static <T> T instantiateObjectFromName(@NotNull Class<T> returnClazz, @NotNull String clazzName) {
+        return instantiateObjectFromName(returnClazz, clazzName, new Class<?>[] {}, new Object[] {});
     }
 }

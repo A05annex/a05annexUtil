@@ -1,4 +1,4 @@
-* **version:** 0.9.6
+* **version:** 2025.0.1
 * **status:** released (first release version: 0.8.5)
 * **comments:** We have been using this library for robot development since December 2020, and
 believe it is ready for general use.
@@ -35,7 +35,8 @@ used regardless of the FTC/FRC base platform libraries and/or hardware.
 * **`AngleTYpe`** - The angle unit specification..
 * **`JsonSupport`** - a class with helper functions to aid in reading/writing JSON files.
 * **`Utl`** - a class which extends the java `Math` class with variable argument `min()`, `max()`,
-  `length()`, and `clip()` functions.
+  `length()`, and `clip()` functions, also includes methods using reflection for instantiation
+  and field modification.
 
 ## Including a05annexUtil in your build.gradle
 
@@ -51,7 +52,7 @@ There are a couple paths for inclusion.
 Simply add it to the dependencies section of your `gradle.build` file as:
 ```
 dependencies {
-    implementation 'org.a05annex:a05annexUtil:0.9.6'
+    implementation 'org.a05annex:a05annexUtil:2025.0.1'
      .
      .
      .
@@ -66,16 +67,21 @@ The next most simple way to use **a05annexUtil**, following the advice from this
 [chiefdelphi post](https://www.chiefdelphi.com/t/adding-my-teams-library-as-a-vendor-library/339626)
 and advises you:
 * create a `libs` folder in your robot project
-* copy the `a05annxUtil-0.9.6.jar` file from the github 0.9.6 release into that `libs` folder
+* copy the `a05annxUtil-2025.0.1.jar` file from the github 0.9.6 release into that `libs` folder
 * in the dependencies section of the `build.gradle` file add the line:  
   `implementation fileTree(dir: 'libs', include: ['*.jar'])`
-* add the `libs/a05annxUtil-0.9.6.jar` to **git** so it is saved as part of your project.
+* add the `libs/a05annxUtil-2025.0.1.jar` to **git** so it is saved as part of your project.
 
 The disadvantage of this method is that you must manually download the library and
 put it in your project, you also need to check for version updates.
 
 ## Release Notes
 
+* version 2025.0.1 - ?-Jan 2025
+  * changed the versioning to be consistent with WPI versioning.
+  * Added Util.setOnce(...) to allow setting library constants from the implementation
+  * Added Util.instantiateObjectFromName(...) for better support of season extension with
+    tools like the swerve path planner.
 * version 0.9.6 - 05-Dec-2023 - 2023 Charged Up season and post season improvements:
   * Added `Utl.inTolerance(...)` method for testing whether a value is within a specified tolerance
     of a target value.
