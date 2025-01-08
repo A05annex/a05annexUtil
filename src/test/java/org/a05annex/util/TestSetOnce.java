@@ -1,13 +1,11 @@
 package org.a05annex.util;
 
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.platform.runner.JUnitPlatform;
-import org.junit.runner.RunWith;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@RunWith(JUnitPlatform.class)
+
 class TestSetOnce {
 
 	static class TestInstance {
@@ -43,31 +41,13 @@ class TestSetOnce {
 		}
 	}
 
-	static class TestStaticInstance {
-		private static String staticField;
-
-		public static String getStaticField() {
-			return staticField;
-		}
-
-		public static void resetStaticField() {
-			staticField = null; // Reset the static variable to ensure test isolation
-		}
-	}
-
-	@AfterEach
-	void resetStaticFields() {
-		// Ensure the static field is reset between tests
-		TestStaticInstance.resetStaticField();
-	}
-
 	// *****************************************************************************************************************
 	// Test instance field set - set eat of the fields in the instance
 	@Test
 	void testSetOnceSuccessful() {
 		TestInstance instance = new TestInstance();
-		Boolean boolValue = new Boolean(false);
-		Integer intValue = new Integer(42);
+		Boolean boolValue = Boolean.valueOf(false);
+		Integer intValue = Integer.valueOf(42);
 		String strValue1 = " test value 1";
 		String strValue2 = " test value 2";
 
@@ -150,45 +130,125 @@ class TestSetOnce {
 				"The exception message should indicate that 'cannot be set to a'.");
 	}
 
+
 	// *****************************************************************************************************************
-	// Test static field set
-	@Test
-	void testStaticSetOnceSuccessful() {
-		String value = "staticTestValue";
 
-		String result = Utl.setOnce(value, TestStaticInstance.class);
+	final static class TestStatic {
+		private static Boolean boolField = null;
+		private static Integer intField = null;
+		private static String strField1 = null;
+		private static String strField2 = null;
 
-		assertEquals(value, result, "The returned value should match the provided value.");
-		assertNotNull(TestStaticInstance.getStaticField(), "The static field should be set on the class.");
-		assertEquals(value, TestStaticInstance.getStaticField(),
-				"The static field should equal the provided value.");
+		public static Boolean getBoolField() {
+			return boolField;
+		}
+
+		public static Integer getIntField() {
+			return intField;
+		}
+
+		public static String getStrField1() {
+			return strField1;
+		}
+
+		public static String getStrField2() {
+			return strField2;
+		}
 	}
 
-	// Test if exception is thrown for static field already set
+	@BeforeEach
+	void resetStaticFields() {
+		TestStatic.boolField = null;
+		TestStatic.intField = null;
+		TestStatic.strField1 = null;
+		TestStatic.strField2 = null;
+	}
+
+	// *****************************************************************************************************************
+// Test static field set - set each of the static fields in the class
 	@Test
-	void testStaticSetOnceThrowsIfFieldAlreadySet() {
-		TestStaticInstance.staticField = "existingStaticValue"; // Pre-set the static field
-		String value = "newStaticValue";
+	void testSetOnceStaticSuccessful() {
+		Boolean boolValue = Boolean.valueOf(false);
+		Integer intValue = Integer.valueOf(42);
+		String strValue1 = " test value 1";
+		String strValue2 = " test value 2";
+		Class<TestStatic> test = TestStatic.class;
+
+		// test all of the value set commands for static fields
+		Object result = Utl.setOnce(TestStatic.class, "boolField", boolValue);
+		assertEquals(boolValue, result, "The returned value should match the provided boolValue.");
+		result = Utl.setOnce(TestStatic.class, "intField", intValue);
+		assertEquals(intValue, result, "The returned value should match the provided intValue.");
+		result = Utl.setOnce(TestStatic.class, "strField1", strValue1);
+		assertEquals(strValue1, result, "The returned value should match the provided strValue1.");
+		result = Utl.setOnce(TestStatic.class, "strField2", strValue2);
+		assertEquals(strValue2, result, "The returned value should match the provided strValue2.");
+
+		// test that all of the static fields are correctly set
+		assertEquals(boolValue, TestStatic.getBoolField(), "The field should equal the provided boolValue.");
+		assertEquals(intValue, TestStatic.getIntField(), "The field should equal the provided intValue.");
+		assertEquals(strValue1, TestStatic.getStrField1(), "The field should equal the provided strValue1.");
+		assertEquals(strValue2, TestStatic.getStrField2(), "The field should equal the provided strValue2.");
+	}
+
+	// Test if exception is thrown when the static field name does not exist
+	@Test
+	void testSetOnceStaticInvalidFieldName() {
+		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+				() -> Utl.setOnce(TestStatic.class, "junk", "junk"),
+				"Setting a non-existent static field should throw an IllegalArgumentException."
+		);
+	}
+
+	// Test if exception is thrown when the static field is already set at class initialization.
+	@Test
+	void testSetOnceStaticThrowsIfFieldSetAtInitialization() {
+		String instantiationValue = "existingStrValue1";
+
+		// Set static fields at initialization
+		Utl.setOnce(TestStatic.class, "strField1", instantiationValue);
+		String value = "newValue";
 
 		IllegalStateException exception = assertThrows(IllegalStateException.class,
-				() -> Utl.setOnce(value, TestStaticInstance.class),
+				() -> Utl.setOnce(TestStatic.class, "strField1", value),
 				"Setting a static field more than once should throw an IllegalStateException."
 		);
-
-		assertTrue(exception.getMessage().contains("more than once"),
-				"The exception message should indicate that the field was set more than once.");
+		assertTrue(exception.getMessage().contains("is already set"),
+				"The exception message should indicate that the field 'is already set'.");
+		// Verify the value of the static field was not changed
+		assertEquals(instantiationValue, TestStatic.getStrField1(), "The field should have the instantiation value.");
 	}
 
-	// Test if exception is thrown for no suitable static field
+	// Test if exception is thrown when the static field is set twice using setOnceStatic()
 	@Test
-	void testStaticSetOnceThrowsIfNoFieldIsSuitable() {
+	void testSetOnceStaticThrowsIfFieldSetTwice() {
+		String firstValue = "firstNewValue";
+		String secondValue = "secondNewValue";
+
+		// Set the value, the first set should work
+		Object result = Utl.setOnce(TestStatic.class, "strField1", firstValue);
+		assertEquals(firstValue, result, "The returned value should match the provided strValue1.");
+		// Try to set the value again, this should fail
 		IllegalStateException exception = assertThrows(IllegalStateException.class,
-				() -> Utl.setOnce(123, TestStaticInstance.class),
-				"Setting a value that doesn't match any static field type should throw an IllegalStateException."
+				() -> Utl.setOnce(TestStatic.class, "strField1", secondValue),
+				"Setting a static field more than once should throw an IllegalStateException."
+		);
+		assertTrue(exception.getMessage().contains("is already set"),
+				"The exception message should indicate that the field 'is already set'.");
+		// Verify the value of the static field was not changed
+		assertEquals(firstValue, TestStatic.getStrField1(), "The field should have the instantiation value.");
+	}
+
+	// Test if exception is thrown when the specified static field has an incompatible type
+	@Test
+	void testSetOnceStaticThrowsIfIncompatibleType() {
+		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+				() -> Utl.setOnce(TestStatic.class, "strField1", 123),
+				"Setting a value that doesn't match any static field type should throw an IllegalArgumentException."
 		);
 
-		assertTrue(exception.getMessage().contains("No suitable static variable"),
-				"The exception message should indicate that no suitable static field was found.");
+		assertTrue(exception.getMessage().contains("cannot be set to a"),
+				"The exception message should indicate that 'cannot be set to a'.");
 	}
 
 }

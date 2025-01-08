@@ -1,7 +1,6 @@
 package org.a05annex.util;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -147,49 +146,57 @@ public final class Utl {
     }
 
     /**
-     * Sets the value of a static field in the specified class if and only if
-     * the field has not been set already. If a static field in the class
-     * already has a non-null value, an exception is thrown to prevent overwriting.
+     * Sets the value of a static field in the given class exactly once. If a matching static field
+     * is already set, or if no suitable field exists to set, an exception is thrown.
      * <p>
      * This method is for setting **static variables** only. For setting instance variables,
      * use {@link #setOnce(Object, String, Object)}.
      *
-     * @param <T>      The type of the value to be set.
-     * @param newValue The new value to be assigned to the static field.
-     * @param clazz    The class containing the static field to be set.
-     * @return The value that was set.
-     * @throws IllegalStateException If there is already a non-null value
-     *                               in the static field, if no suitable static field is found,
-     *                               or if the access to the field fails.
+     * @param <T>       The type of the value being set.
+     * @param clazz     The class whose static field is to be set. The class's static fields
+     *                  will be inspected for a field named {@code fieldName} assignable from the type of
+     *                  {@code newValue}.
+     * @param fieldName The name of the static field you want to set.
+     * @param newValue  The value to set in the {@code clazz} and {@code fieldName}. It must match the type of
+     *                  {@code fieldName}.
+     * @return The value that was successfully set in the static field.
+     * @throws IllegalArgumentException Thrown if a static field named {@code fieldName} was not found, or if the
+     *                                  {@code newValue} type could not be used as the value for {@code fieldName}.
+     * @throws IllegalStateException    Thrown if the static field {@code fieldName} has already been set.
      */
-    public static <T> T setOnce(T newValue, Class<?> clazz) {
+    public static <T> T setOnce(@NotNull Class<?> clazz, String fieldName, @NotNull T newValue) {
         try {
-            // Iterate through all declared fields in the class
-            for(Field field : clazz.getDeclaredFields()) {
-                field.setAccessible(true);
-
-                // Check if the field is static
-                if(Modifier.isStatic(field.getModifiers())) {
-                    Object currentValue = field.get(null); // Get static field value (null for static access)
-
-                    // Throw exception if static field is already set
-                    if(currentValue != null) {
-                        throw new IllegalStateException("You tried to set the static variable \"" + field.getName() + "\" more than once");
+            // Step 1: Loop over declared fields in the given class
+            for (Field field : clazz.getDeclaredFields()) {
+                String thisFieldName = field.getName();
+                // Step 2: Check if the field name matches
+                if (fieldName.equals(thisFieldName)) {
+                    // Step 3: Ensure the field is static
+                    if (!Modifier.isStatic(field.getModifiers())) {
+                        throw new IllegalArgumentException(String.format("Field '%s' is not static", fieldName));
                     }
-
-                    // If the static field matches the newValue's type, set it
-                    if(newValue != null && field.getType().isAssignableFrom(newValue.getClass())) {
-                        field.set(null, newValue); // Set the static field value
+                    // Step 4: Make the field accessible and check if it is already set
+                    field.setAccessible(true);
+                    Object currentValue = field.get(null); // Static fields use null for the instance
+                    if (currentValue != null) {
+                        throw new IllegalStateException(String.format("The static field '%s' is already set", fieldName));
+                    }
+                    // Step 5: Check if the type matches and set the value
+                    if (field.getType().isAssignableFrom(newValue.getClass())) {
+                        field.set(null, newValue); // Set static field value
                         return newValue;
+                    } else {
+                        throw new IllegalArgumentException(String.format("Static field '%s' cannot be set to a '%s'",
+                                fieldName, newValue.getClass().getName()));
                     }
                 }
             }
         } catch (IllegalAccessException e) {
-            throw new IllegalStateException("Failed to access static fields", e);
+            throw new IllegalStateException(String.format("Failed to access static field '%s'", fieldName), e);
         }
-
-        throw new IllegalStateException("No suitable static variable was found to set.");
+        throw new IllegalArgumentException(String.format("No static field '%s' found in class '%s'", fieldName, clazz.getName()));
     }
+
 
     // -----------------------------------------------------------------------------------------------------------------
     // Instantiation by reflection - we are finding increasingly more cases where we are writing library code that
