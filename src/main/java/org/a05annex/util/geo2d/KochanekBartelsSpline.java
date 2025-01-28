@@ -13,7 +13,8 @@ import java.awt.geom.Point2D;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.Iterable;
-import java.util.Iterator;
+import java.util.*;
+
 
 import static org.a05annex.util.JsonSupport.*;
 
@@ -86,6 +87,10 @@ public class KochanekBartelsSpline {
     static final String ROBOT_ACTION_DURATION = "robotActionDuration";
     static final String ROBOT_SCHEDULED_ACTIONS = "robotScheduledActions";
     static final String ROBOT_SCHEDULED_ACTION_TIME = "robotScheduledActionTime";
+    static final String ROBOT_ACTION_ARGS = "robotActionArgs";
+    static final String ROBOT_ACTION_ARG_TYPE = "robotActionArgType";
+    static final String ROBOT_ACTION_ARG_VALUE = "robotActionArgValue";
+
 
     // -----------------------------------------------------------------------------------------------------------------
     /**
@@ -186,6 +191,92 @@ public class KochanekBartelsSpline {
     }
 
     /**
+     * This is the description of an argument to a {@link RobotAction} command. The description has 2 parts:
+     * <ul>
+     *     <li>Argument class</li>
+     *     <li>Argument value</li>
+     * </ul>
+     */
+    public static class RobotActionArg {
+        final public static Map<String, Class> ARG_TYPES = new HashMap<>() {{
+            put("String", String.class);
+            put("Boolean", Boolean.class);
+            put("Integer", Integer.class);
+            put("Long", Long.class);
+            put("Float", Float.class);
+            put("Double", Double.class);
+        }};
+        private String argType;
+        private Class argClass;
+        private String valueString = null;
+        private Object value = null;
+
+        public RobotActionArg(String argType) {
+            this(argType, null);
+        }
+
+        public RobotActionArg(String argType, String valueString) {
+            this.argType = argType;
+            this.argClass = ARG_TYPES.get(argType);
+            this.setValue(valueString);
+        }
+
+        void setValue(String valueString) {
+             if (null != valueString) {
+                 // OK, this is really ugly:
+                 try {
+                     switch (argType) {
+                         case "String":
+                             value = valueString;
+                             break;
+                         case "Boolean":
+                             value = Boolean.parseBoolean(valueString);
+                             break;
+                         case "Integer":
+                             value = Integer.parseInt(valueString);
+                             break;
+                         case "Long":
+                             value = Long.parseLong(valueString);
+                             break;
+                         case "Float":
+                             value = Float.parseFloat(valueString);
+                             break;
+                         case "Double":
+                             value = Double.parseDouble(valueString);
+                             break;
+                         default:
+                             throw new IllegalStateException(String.format("Arg type '%s' is unknown.", argType));
+                     }
+                 } catch (IllegalStateException e) {
+                     throw e;
+                 } catch (Exception e) {
+                     throw new IllegalArgumentException(String.format(
+                             "String '%s' cannot be parsed to a valid '%s' value.", valueString, argType));
+                 }
+                 this.valueString = valueString;
+
+             } else {
+                 value = null;
+                 this.valueString = null;
+             }
+        }
+
+        public String getArgType() {
+            return argType;
+        }
+        public Class getArgClass() {
+            return argClass;
+        }
+
+        public String getValueString() {
+            return valueString;
+        }
+        public Object getValueObject() {
+            return value;
+        }
+    }
+
+    /**
      * This is the specification of a robot action that should be initiated at some point on the path.
      */
     public static class RobotAction {
@@ -205,16 +296,21 @@ public class KochanekBartelsSpline {
          */
         public final String command;
         /**
+         *
+         */
+        List<RobotActionArg> m_robotActionArgs = new ArrayList<RobotActionArg>();
+        /**
          * An approximate duration for a {@link RobotActionType#STOP_AND_RUN_COMMAND} {@link #command}. This is
          * used for path planning only. In competition the actual duration of the command may vary widely subject
          * to the demands of the competition. This field is meaningless for a
          * {@link RobotActionType#SCHEDULE_COMMAND} and should be set to {@code 0.0}.
          */
         public final double approxDuration;
-
+        /**
+         * The time along the path where this {@link RobotActionType#SCHEDULE_COMMAND} command should be
+         * scheduled. This field is meaningless for a {@link RobotActionType#STOP_AND_RUN_COMMAND}.
+         */
         double pathTime;
-
-
 
         /**
          * Instantiate a schedule command action that should be performed in parallel with path following.
@@ -241,6 +337,76 @@ public class KochanekBartelsSpline {
             this.command = command;
             this.approxDuration = approxDuration;
             this.pathTime = -1.0;
+        }
+
+        /**
+         *
+         * @param robotActionArg
+         */
+        void appendArgument(RobotActionArg robotActionArg) {
+            m_robotActionArgs.add(robotActionArg);
+        }
+
+        /**
+         *
+         * @param index
+         * @param robotActionArg
+         */
+        void insertArgument(int index, RobotActionArg robotActionArg){
+            m_robotActionArgs.add(index, robotActionArg);
+        }
+
+        /**
+         *
+         * @param index
+         * @return
+         */
+        RobotActionArg deleteArgument(int index) {
+            return m_robotActionArgs.remove(index);
+        }
+
+        /**
+         * This is a method to support interactive editing of an argument list when
+         * a user is refactoring the arguments and wants to move an argument up (towards the front)
+         * in the argument list.
+         *
+         * @param index The index of argument you want to move up in the list. The value of this index
+         *              must be greater than 0 and less than the length of the argument list.
+         * @throws IndexOutOfBoundsException
+         */
+        void moveArgumentUp(int index) {
+            if (index <= 0) {
+                throw new IndexOutOfBoundsException(
+                        String.format("The argument at index %d or less cannot be moved up in the argument list,",
+                                index));
+            } else if (index >= m_robotActionArgs.size()) {
+                throw new IndexOutOfBoundsException(
+                        String.format("Index %d does not exist in the argument list", index));
+            }
+            RobotActionArg deletedArg = deleteArgument(index);
+            insertArgument(index-1, deletedArg);
+        }
+
+        /**
+         *
+         * @param index
+         */
+        void moveArgumentDown(int index) {
+
+        }
+        Class<?>[] getArgTypeArray() {
+            ArrayList<Class<?>> argTypes = new ArrayList<>();
+            for(RobotActionArg arg : m_robotActionArgs) {
+                argTypes.add(arg.argClass);
+            }
+            return argTypes.toArray(new Class<?>[m_robotActionArgs.size()]);
+        }
+        Object[] getArgValueArray() {
+            ArrayList<Object> argValues = new ArrayList<>();
+            for(RobotActionArg arg : m_robotActionArgs) {
+                argValues.add(arg.value);
+            }
+            return argValues.toArray(new Object[m_robotActionArgs.size()]);
         }
     }
 
@@ -480,8 +646,7 @@ public class KochanekBartelsSpline {
         boolean m_headingDerivativeEdited = false;
         double m_dHeading = 0.0;
         // This is a robot action to stop at this control point and do something
-        String m_robotAction = null;
-        double m_actionDuration = 0.0;
+        RobotAction m_robotAction = null;
         // These are never saved, they are always computed based on the saved tangents and the times of this
         // point and the surrounding points.
         double m_dXin = 0.0;
@@ -520,8 +685,10 @@ public class KochanekBartelsSpline {
             m_dY = parseDouble(json, FIELD_dY, 0.0);
             m_dHeading = parseDouble(json, FIELD_dHEADING, 0.0);
             m_headingDerivativeEdited = parseBoolean(json, HEADING_DERIVATIVE_EDITED, false);
-            m_robotAction = parseString(json, ROBOT_ACTION_COMMAND, null);
-            m_actionDuration = parseDouble(json, ROBOT_ACTION_DURATION, 0.0);
+            String command = parseString(json, ROBOT_ACTION_COMMAND, null);
+            if (null != command) {
+                m_robotAction = new RobotAction(command, parseDouble(json, ROBOT_ACTION_DURATION, 0.0));
+            }
         }
 
         /**
@@ -542,8 +709,8 @@ public class KochanekBartelsSpline {
             controlPoint.put(FIELD_dHEADING, m_dHeading);
             controlPoint.put(HEADING_DERIVATIVE_EDITED, m_headingDerivativeEdited);
             if (null != m_robotAction) {
-                controlPoint.put(ROBOT_ACTION_COMMAND, m_robotAction);
-                controlPoint.put(ROBOT_ACTION_DURATION, m_actionDuration);
+                controlPoint.put(ROBOT_ACTION_COMMAND, m_robotAction.command);
+                controlPoint.put(ROBOT_ACTION_DURATION, m_robotAction.approxDuration);
             }
             return controlPoint;
         }
@@ -575,7 +742,8 @@ public class KochanekBartelsSpline {
          * control points are moved. This only effects points whose derivatives have been manually edited.
          */
         public void resetDerivative() {
-            if (m_locationDerivativesEdited || m_headingDerivativeEdited) {
+            if (!isRobotStopped() &&
+                    (m_locationDerivativesEdited || m_headingDerivativeEdited)) {
                 m_locationDerivativesEdited = false;
                 m_headingDerivativeEdited = false;
                 updateLocationDerivatives();
@@ -757,6 +925,10 @@ public class KochanekBartelsSpline {
         }
 
         public void setTangent(double dX, double dY) {
+            if (isRobotStopped() && ((dX != 0.0) || (dY != 0.0))) {
+                throw new IllegalArgumentException(
+                        "The tangent can only be set to 0.0,0.0 for a control point where the robot is stopped");
+            }
             m_dX = dX;
             m_dY = dY;
             m_locationDerivativesEdited = true;
@@ -890,6 +1062,10 @@ public class KochanekBartelsSpline {
          * @param rotationSpeed The rotation speed (radians/sec)
          */
         public void setRotationSpeed(double rotationSpeed) {
+            if (isRobotStopped() && (rotationSpeed != 0.0)) {
+                throw new IllegalArgumentException(
+                        "The rotation speed can only be set to 0.0 for a control point where the robot is stopped");
+            }
             m_dHeading = rotationSpeed;
             m_headingDerivativeEdited = true;
             // update the derivatives
@@ -992,7 +1168,9 @@ public class KochanekBartelsSpline {
          * <code>null</code>'s any actions associated with this control point.
          *
          * @param commandName         The name of the action to be performed (a class in the
-         *                            <code>frc.robot.command</code> package with a no-argument constructor).
+         *                            <code>frc.robot.command</code> package with a no-argument constructor);
+         *                            <code>null</code> if there should be no command associated with this
+         *                            control point.
          * @param approximateDuration The approximate duration of the command (in seconds) to be used
          *                            only in path planning applications.
          */
@@ -1000,26 +1178,38 @@ public class KochanekBartelsSpline {
             // apply this action only if something has changed
             if (null != commandName) {
                 // Here we stop, relinquish drive, and do something, then resume,
-                m_robotAction = commandName;
+                m_robotAction = new RobotAction(commandName, approximateDuration);
                 setTangent(0.0, 0.0);    // we are not moving
-                m_actionDuration = approximateDuration;
+                setRotationSpeed(0.0);
             } else if (null != m_robotAction) {
                 // This is releasing the 'stop and run command' constraint, so the derivatives go back the
                 // default computations of the derivatives
                 m_robotAction = null;
                 resetDerivative();
-                m_actionDuration = 0.0;
             }
+        }
+
+        /**
+         * Test whether the robot is stopped at this control point. If the robot is
+         * stopped, there is no tangent at this control point. The robot is stopped
+         * at the path start, path end. and when there is a <i>stop and run action</i> at a control point.
+         *
+         * @return {@code true} if the robot is stopped at this control point, {@code false} otherwise.
+         */
+        public boolean isRobotStopped() {
+            return ((null != m_robotAction) ||  // stop and execute action
+                    (null == m_last) ||         // the first point on the path
+                    (null == m_next));          // the last point on the path
         }
 
         /**
          * Get the robot action that should be performed at this control point.
          *
-         * @return The robot action, or <code>null</code> is no action, other than continuing along the path,
+         * @return The robot action, or {@code null} is no action, other than continuing along the path,
          * should be performed.
          */
         public RobotAction getRobotAction() {
-            return (null == m_robotAction) ? null : new RobotAction(m_robotAction, m_actionDuration);
+            return m_robotAction;
         }
 
         /**
@@ -1048,9 +1238,14 @@ public class KochanekBartelsSpline {
          * @param tolerance (double) The test tolerance - specifically, the distance from the actual field
          *                  position that the test point must be within to be considered a hit on the
          *                  control point tangent handle.
-         * @return Returns {@code true} if the test point is over the tangent point, and {@code false} otherwise.
+         * @return Returns {@code true} if the test point is over the tangent point, and {@code false} otherwise. Note
+         *                  that if the robot is stopped at this control point, there is no tangent and {@code false}
+         *                  will always be returned.
          */
-        public boolean testOveTangentPoint(double fieldX, double fieldY, double tolerance) {
+        public boolean testOverTangentPoint(double fieldX, double fieldY, double tolerance) {
+            if (isRobotStopped()) {
+                return false;
+            }
             double dx = getTangentX() - fieldX;
             double dy = getTangentY() - fieldY;
             return Math.sqrt((dx * dx) + (dy * dy)) < tolerance;
@@ -1499,7 +1694,13 @@ public class KochanekBartelsSpline {
         ControlPoint newControlPoint = new ControlPoint(this, time);
         appendControlPoint(newControlPoint);
         newControlPoint.setFieldLocation(fieldX, fieldY);
+        newControlPoint.setTangent(0.0, 0.0);
+        newControlPoint.setRotationSpeed(0.0);
         newControlPoint.setFieldHeading(new AngleD(fieldHeading));
+        if ((null != newControlPoint.getLast().getLast()) &&
+                !newControlPoint.getLast().isRobotStopped()) {
+            newControlPoint.getLast().resetDerivative();
+        }
         return newControlPoint;
     }
 
@@ -1605,6 +1806,9 @@ public class KochanekBartelsSpline {
         } else {
             // This is the last point being deleted
             last = controlPoint.m_last;
+            // The new last needs its derivatives zeroed
+            last.setTangent(0.0,0.0);
+            last.setRotationSpeed(0.0);
         }
 
         // and reset the derivatives for the surrounding points.

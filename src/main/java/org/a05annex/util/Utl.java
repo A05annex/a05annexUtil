@@ -112,7 +112,7 @@ public final class Utl {
      * @return The value that was successfully set in the instance.
      * @throws IllegalArgumentException Thrown if a field named {@code fieldName} was not found, or if the
      *                                  {@code newValue} type could not be used as the value for {@code fieldName}.
-     * @throws IllegalStateException Thrown if {@code fieldName} has already been set.
+     * @throws IllegalStateException Thrown if {@code fieldName} has already been set, or could not be accessed.
      */
     public static <T> T setOnce(@NotNull Object instance, String fieldName, @NotNull T newValue) {
         try {
@@ -162,7 +162,8 @@ public final class Utl {
      * @return The value that was successfully set in the static field.
      * @throws IllegalArgumentException Thrown if a static field named {@code fieldName} was not found, or if the
      *                                  {@code newValue} type could not be used as the value for {@code fieldName}.
-     * @throws IllegalStateException    Thrown if the static field {@code fieldName} has already been set.
+     * @throws IllegalStateException    Thrown if the static field {@code fieldName} has already been set, or
+     *                                  could not be accessed.
      */
     public static <T> T setOnce(@NotNull Class<?> clazz, String fieldName, @NotNull T newValue) {
         try {

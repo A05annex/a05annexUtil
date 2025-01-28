@@ -5,9 +5,7 @@ public class TestObjBase {
     private final Integer intField;
     private final String strField;
     public TestObjBase() {
-        this.boolField = null;
-        this.intField = null;
-        this.strField = null;
+        this(null,null,null);
     }
     TestObjBase(Boolean boolField, Integer intField, String strField) {
         this.boolField = boolField;

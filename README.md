@@ -67,19 +67,27 @@ The next most simple way to use **a05annexUtil**, following the advice from this
 [chiefdelphi post](https://www.chiefdelphi.com/t/adding-my-teams-library-as-a-vendor-library/339626)
 and advises you:
 * create a `libs` folder in your robot project
-* copy the `a05annxUtil-2025.0.1.jar` file from the github 0.9.6 release into that `libs` folder
+* copy the `a05annxUtil-2025.0.2.jar` file from the github 2025.0.2 release into that `libs` folder
 * in the dependencies section of the `build.gradle` file add the line:  
   `implementation fileTree(dir: 'libs', include: ['*.jar'])`
-* add the `libs/a05annxUtil-2025.0.1.jar` to **git** so it is saved as part of your project.
+* add the `libs/a05annxUtil-2025.0.2.jar` to **git** so it is saved as part of your project.
 
 The disadvantage of this method is that you must manually download the library and
 put it in your project, you also need to check for version updates.
 
 ## Release Notes
 
-* version 2025.0.1 - ?-Jan 2025
+* version 2025.0.2 - 8-Jan 2025
+  * `KochanekBartelsSpline` modifications to better support Server Path Planner and other path
+    editing UIs:
+    * added a `ControlPoint.isRobotStopped()` method to test whether this is a control point
+      where the robot is forced to be stopped (path start, path end, and where a *stop and run*
+      command is scheduled).
+    * added checking in control point addition, deletion, and insertion to properly set the
+      derivatives for a point where the robot should be stopped.
+* version 2025.0.1 - 8-Jan 2025
   * changed the versioning to be consistent with WPI versioning.
-  * Added Util.setOnce(...) to allow setting library constants from the implementation
+  * Added Util.setOnce(...) to allow setting library constants from the robot code
   * Added Util.instantiateObjectFromName(...) for better support of season extension with
     tools like the swerve path planner.
 * version 0.9.6 - 05-Dec-2023 - 2023 Charged Up season and post season improvements:
