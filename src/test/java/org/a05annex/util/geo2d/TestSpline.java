@@ -21,6 +21,8 @@ public class TestSpline {
     private static final double START_END_Y = 20.0;
     private final KochanekBartelsSpline startEndDerivativeTest = new KochanekBartelsSpline();
     private final KochanekBartelsSpline scaleSpeedTest = new KochanekBartelsSpline();
+    private final double scaleSpeedStartTime = 1.0;
+    private final double scaleSpeedEndTime = 2.0;
     private final KochanekBartelsSpline adjustTimeTest;
     private final List<KochanekBartelsSpline.ControlPoint> adjustTimeTestPoints = new ArrayList<>();
 
@@ -32,30 +34,16 @@ public class TestSpline {
         startEndDerivativeTest.addControlPoint(new Point2D.Double(START_END_X, START_END_Y));
 
         // create a test spline for speed multiplier
-        addControlPoint(scaleSpeedTest, 0.0, 0.0, REF_SPEED, 0.0);
-        addControlPoint(scaleSpeedTest, 10.0, 0.0, REF_SPEED, 0.0);
+        scaleSpeedTest.addControlPoint(-5.0, 0.0);
+        KochanekBartelsSpline.ControlPoint cp1 = scaleSpeedTest.addControlPoint(0.0, 0.0);
+        KochanekBartelsSpline.ControlPoint cp2 = scaleSpeedTest.addControlPoint(10.0,0.0);
+        scaleSpeedTest.addControlPoint(15.0, 0.0);
+        cp1.setTangent(REF_SPEED, 0.0);
+        cp2.setTangent(REF_SPEED, 0.0);
 
         // create a test spline for resetting the time for a single point. This is a 3 point curve initially
         // starting as a straight line path at REF_SPEED and going for 2 seconds at that speed.
         adjustTimeTest = createLinearTestSpline(adjustTimeTestPoints);
-    }
-
-    private KochanekBartelsSpline.ControlPoint addControlPoint(KochanekBartelsSpline spline,
-                                                               double fieldX, double fieldY,
-                                                               double field_dX, double field_dY) {
-        KochanekBartelsSpline.ControlPoint thisPt;
-        thisPt = spline.addControlPoint(fieldX, fieldY);
-        thisPt.setTangent(field_dX, field_dY);
-        return thisPt;
-    }
-
-    private KochanekBartelsSpline.ControlPoint addControlPoint(KochanekBartelsSpline spline,
-                                                               double fieldX, double fieldY,
-                                                               double field_dX, double field_dY,
-                                                               double time, boolean propagate) {
-        KochanekBartelsSpline.ControlPoint thisPt = addControlPoint(spline, fieldX, fieldY, field_dX, field_dY);
-        thisPt.setTime(time, propagate);
-        return thisPt;
     }
 
     /**
@@ -66,14 +54,26 @@ public class TestSpline {
      */
     private KochanekBartelsSpline createLinearTestSpline(@NotNull List<KochanekBartelsSpline.ControlPoint> ctrlPts) {
         final KochanekBartelsSpline spline = new KochanekBartelsSpline();
-        ctrlPts.add(addControlPoint(spline, 0.0 * REF_SPEED, 0.0,
-                REF_SPEED, 0.0));
-        ctrlPts.add(addControlPoint(spline, 0.5 * REF_SPEED, 0.0,
-                REF_SPEED, 0.0, 0.5, false));
-        ctrlPts.add(addControlPoint(spline, 1.5 * REF_SPEED, 0.0,
-                REF_SPEED, 0.0, 1.5, false));
-        ctrlPts.add(addControlPoint(spline, 3.0 * REF_SPEED, 0.0,
-                REF_SPEED, 0.0, 3.0, false));
+        // because we are now setup for interactive editing, there is an ordering to creating this path that
+        // is dropping the points ito position, then editing the interior points of interest so they reflect
+        // the exact conditions of the test. The first and last points are so we can accelerate from stopped
+        // and decelerate from top speed.
+        // accelerate to REF_SPEED
+        spline.addControlPoint(-0.25 * REF_SPEED, 0.0);
+        // run at REF_SPEED through 4 control points spaced at different times, whose points are spaced so
+        // that they should be achieved by a constant speed at the specified time.
+        ctrlPts.add(spline.addControlPoint(0.0 * REF_SPEED, 0.0).setTime(0.5,false));
+        ctrlPts.add(spline.addControlPoint(0.5 * REF_SPEED, 0.0).setTime(1.0,false));
+        ctrlPts.add(spline.addControlPoint(1.5 * REF_SPEED, 0.0).setTime(2.0,false));
+        ctrlPts.add(spline.addControlPoint(3.0 * REF_SPEED, 0.0).setTime(3.5,false));
+        // 0.5 sec decelerate from REF_SPEED
+        spline.addControlPoint(3.25 * REF_SPEED, 0.0).setTime(4.0, false);
+
+        // set the speed for the interior points of the spline
+        ctrlPts.get(0).setTangent(REF_SPEED, 0.0);
+        ctrlPts.get(1).setTangent(REF_SPEED, 0.0);
+        ctrlPts.get(2).setTangent(REF_SPEED, 0.0);
+        ctrlPts.get(3).setTangent(REF_SPEED, 0.0);
         return spline;
     }
 
@@ -154,12 +154,15 @@ public class TestSpline {
         scaleSpeedTest.setSpeedMultiplier(1.0);
         assertEquals(1.0, scaleSpeedTest.getSpeedMultiplier());
         KochanekBartelsSpline.PathFollower follower = scaleSpeedTest.getPathFollower();
-        double time = 0.0;
+        double time = scaleSpeedStartTime;
         KochanekBartelsSpline.PathPoint pathPt;
         while (null != (pathPt = follower.getPointAt(time))) {
             assertEquals(time, pathPt.time, 0.00001);
             assertEquals(REF_SPEED, pathPt.speedStrafe, 0.00001);
             time += 0.1;
+            if (time > scaleSpeedEndTime) {
+                break;
+            }
         }
     }
 
@@ -169,12 +172,15 @@ public class TestSpline {
         scaleSpeedTest.setSpeedMultiplier(0.5);
         assertEquals(0.5, scaleSpeedTest.getSpeedMultiplier());
         KochanekBartelsSpline.PathFollower follower = scaleSpeedTest.getPathFollower();
-        double time = 0.0;
+        double time = scaleSpeedStartTime / 0.5;
         KochanekBartelsSpline.PathPoint pathPt;
         while (null != (pathPt = follower.getPointAt(time))) {
             assertEquals(time, pathPt.time, 0.00001);
             assertEquals(REF_SPEED * 0.5, pathPt.speedStrafe, 0.00001);
             time += 0.1;
+            if (time > scaleSpeedEndTime / 0.5) {
+                break;
+            }
         }
     }
 
@@ -184,12 +190,15 @@ public class TestSpline {
         scaleSpeedTest.setSpeedMultiplier(1.5);
         assertEquals(1.5, scaleSpeedTest.getSpeedMultiplier());
         KochanekBartelsSpline.PathFollower follower = scaleSpeedTest.getPathFollower();
-        double time = 0.0;
+        double time = scaleSpeedStartTime / 1.5;
         KochanekBartelsSpline.PathPoint pathPt;
         while (null != (pathPt = follower.getPointAt(time))) {
             assertEquals(time, pathPt.time, 0.00001);
             assertEquals(REF_SPEED * 1.5, pathPt.speedStrafe, 0.00001);
             time += 0.1;
+            if (time > scaleSpeedEndTime / 1.5) {
+                break;
+            }
         }
     }
 
@@ -207,32 +216,41 @@ public class TestSpline {
         adjustTimeTest.setSpeedMultiplier(1.0);
         assertEquals(1.0, adjustTimeTest.getSpeedMultiplier());
         KochanekBartelsSpline.PathFollower follower = adjustTimeTest.getPathFollower();
-        double time = 0.0;
+        double time = adjustTimeTestPoints.get(0).m_time;
         KochanekBartelsSpline.PathPoint pathPt;
         while (null != (pathPt = follower.getPointAt(time))) {
             assertEquals(time, pathPt.time, 0.00001);
             assertEquals(REF_SPEED, pathPt.speedStrafe, 0.00001);
             time += 0.1;
+            if (time >= adjustTimeTestPoints.get(3).m_time) {
+                break;
+            }
         }
 
         adjustTimeTestPoints.get(2).setTime(2.5, false);
-        adjustTimeTestPoints.get(2).setFieldLocation(2.5 * REF_SPEED, 0.0);
+        adjustTimeTestPoints.get(2).setFieldLocation(2.0 * REF_SPEED, 0.0);
         follower = adjustTimeTest.getPathFollower();
-        time = 0.0;
+        time = adjustTimeTestPoints.get(0).m_time;
         while (null != (pathPt = follower.getPointAt(time))) {
             assertEquals(time, pathPt.time, 0.00001);
             assertEquals(REF_SPEED, pathPt.speedStrafe, 0.00001);
             time += 0.1;
+            if (time >= adjustTimeTestPoints.get(3).m_time) {
+                break;
+            }
         }
 
         adjustTimeTestPoints.get(1).setTime(1.5, false);
-        adjustTimeTestPoints.get(1).setFieldLocation(1.5 * REF_SPEED, 0.0);
+        adjustTimeTestPoints.get(1).setFieldLocation(1.0 * REF_SPEED, 0.0);
         follower = adjustTimeTest.getPathFollower();
-        time = 0.0;
+        time = adjustTimeTestPoints.get(0).m_time;
         while (null != (pathPt = follower.getPointAt(time))) {
             assertEquals(time, pathPt.time, 0.00001);
             assertEquals(REF_SPEED, pathPt.speedStrafe, 0.00001);
             time += 0.1;
+            if (time >= adjustTimeTestPoints.get(3).m_time) {
+                break;
+            }
         }
     }
 
@@ -291,14 +309,20 @@ public class TestSpline {
         assertEquals(adjustTimeTestPoints.get(0).getNext(), adjustTimeTestPoints.get(1));
         assertEquals(adjustTimeTestPoints.get(1).getNext(), adjustTimeTestPoints.get(2));
         assertEquals(adjustTimeTestPoints.get(2).getNext(), adjustTimeTestPoints.get(3));
-        assertNull(adjustTimeTestPoints.get(3).getNext());
+        // there is a deceleration point after the last point in the constant speed path
+        // of this path
+        assertNotNull(adjustTimeTestPoints.get(3).getNext());
+        assertNull(adjustTimeTestPoints.get(3).getNext().getNext());
 
     }
 
     @Test
     @DisplayName("Verify ControlPoint.getLast()")
     void testSet3_verifyGetLast() {
-        assertNull(adjustTimeTestPoints.get(0).getLast());
+        // there is an acceleration segment before the first point in the constant speed path
+        // of this path
+        assertNotNull(adjustTimeTestPoints.get(0).getLast());
+        assertNull(adjustTimeTestPoints.get(0).getLast().getLast());
         assertEquals(adjustTimeTestPoints.get(1).getLast(), adjustTimeTestPoints.get(0));
         assertEquals(adjustTimeTestPoints.get(2).getLast(), adjustTimeTestPoints.get(1));
         assertEquals(adjustTimeTestPoints.get(3).getLast(), adjustTimeTestPoints.get(2));
@@ -312,14 +336,12 @@ public class TestSpline {
     @DisplayName("Verify KochanekBartelsSpline.deleteControlPoint() Error Handling")
     void ControlPointDeleteErrors() {
         final KochanekBartelsSpline spline = new KochanekBartelsSpline();
-        final KochanekBartelsSpline.ControlPoint firstPt = addControlPoint(spline, 0.0 * REF_SPEED, 0.0,
-                REF_SPEED, 0.0);
+        final KochanekBartelsSpline.ControlPoint firstPt = spline.addControlPoint(0.0,  0.0);
         // try to delete the only control point - should fail
         assertThrows(IllegalStateException.class,
                 () -> spline.deleteControlPoint(firstPt));
         // add a second point
-        final KochanekBartelsSpline.ControlPoint secondPt = addControlPoint(spline, 0.5 * REF_SPEED, 0.0,
-                REF_SPEED, 0.0, 0.5, false);
+        final KochanekBartelsSpline.ControlPoint secondPt = spline.addControlPoint(0.5, 0.0);
         // again try to delete the first control point - should fail
         assertThrows(IllegalStateException.class,
                 () -> spline.deleteControlPoint(firstPt));
@@ -328,7 +350,8 @@ public class TestSpline {
     }
 
     /**
-     * Create a linear path with 4 control points; deletes the second control point (index 1); run a path
+     * Create a linear path with a start control point, 4 control points at constant speed, and an end control point;
+     * deletes the second control point (index 1) in the linear portion; run a path
      * follower and test the returned points to verify this is still a linear path.
      */
     @Test
@@ -340,13 +363,16 @@ public class TestSpline {
         // when a control point is deleted the times around that control point should not change, and the path
         // should still be linear
         spline.deleteControlPoint(controlPoints.get(1));
-        KochanekBartelsSpline.PathFollower follower = scaleSpeedTest.getPathFollower();
-        double time = 0.0;
+        KochanekBartelsSpline.PathFollower follower = spline.getPathFollower();
+        double time = controlPoints.get(0).m_time;
         KochanekBartelsSpline.PathPoint pathPt;
         while (null != (pathPt = follower.getPointAt(time))) {
             assertEquals(time, pathPt.time, 0.00001);
             assertEquals(REF_SPEED, pathPt.speedStrafe, 0.00001);
             time += 0.1;
+            if (time >= controlPoints.get(3).m_time) {
+                break;
+            }
         }
     }
 
@@ -354,16 +380,14 @@ public class TestSpline {
     @DisplayName("Verify KochanekBartelsSpline.insertControlPoint() Error Handling")
     void ControlPointInsertErrors() {
         final KochanekBartelsSpline spline = new KochanekBartelsSpline();
-        final KochanekBartelsSpline.ControlPoint firstPt = addControlPoint(spline, 0.0 * REF_SPEED, 0.0,
-                REF_SPEED, 0.0);
-        // only one point in the spline - there is no where to inset a new control point
+        spline.addControlPoint(0.0, 0.0);
+        // only one point in the spline - there is nowhere to inset a new control point
         assertThrows(IllegalStateException.class,
                 () -> spline.insertControlPoint(0.0));
         assertThrows(IllegalStateException.class,
                 () -> spline.insertControlPoint(-0.1));
         // OK, add a second point, them try the before and after options
-        final KochanekBartelsSpline.ControlPoint secondPt = addControlPoint(spline, 0.5 * REF_SPEED, 0.0,
-                REF_SPEED, 0.0, 0.5, false);
+        spline.addControlPoint( 0.5 * REF_SPEED, 0.0).setTime(0.5,false);
         assertThrows(IllegalArgumentException.class,
                 () -> spline.insertControlPoint(-0.1));
         assertThrows(IllegalArgumentException.class,
@@ -378,14 +402,17 @@ public class TestSpline {
         final KochanekBartelsSpline spline = createLinearTestSpline(controlPoints);
         // Insert a random point and things should be fine - i.e. It should still be a linear path over
         // the same path duration
-        spline.insertControlPoint(1.0);
-        KochanekBartelsSpline.PathFollower follower = scaleSpeedTest.getPathFollower();
-        double time = 0.0;
+        spline.insertControlPoint(1.5);
+        KochanekBartelsSpline.PathFollower follower = spline.getPathFollower();
+        double time = controlPoints.get(0).m_time;
         KochanekBartelsSpline.PathPoint pathPt;
         while (null != (pathPt = follower.getPointAt(time))) {
             assertEquals(time, pathPt.time, 0.00001);
             assertEquals(REF_SPEED, pathPt.speedStrafe, 0.00001);
             time += 0.1;
+            if (time >= controlPoints.get(3).m_time) {
+                break;
+            }
         }
     }
 

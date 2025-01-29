@@ -813,8 +813,9 @@ public class KochanekBartelsSpline {
          *
          * @param fieldX (double) The new field X position.
          * @param fieldY (double) The new field Y position.
+         * @return Returns this control point.
          */
-        public void setFieldLocation(double fieldX, double fieldY) {
+        public ControlPoint setFieldLocation(double fieldX, double fieldY) {
             m_fieldX = fieldX;
             m_fieldY = fieldY;
             // update the derivatives
@@ -833,6 +834,7 @@ public class KochanekBartelsSpline {
                     m_next.m_next.updateLocationDerivatives();
                 }
             }
+            return this;
         }
 
         /**
@@ -924,7 +926,14 @@ public class KochanekBartelsSpline {
             return m_fieldY + (DERIVATIVE_UI_SCALE * m_dY);
         }
 
-        public void setTangent(double dX, double dY) {
+
+        /**
+         *
+         * @param dX
+         * @param dY
+         * @return Returns this control point.
+         */
+        public ControlPoint setTangent(double dX, double dY) {
             if (isRobotStopped() && ((dX != 0.0) || (dY != 0.0))) {
                 throw new IllegalArgumentException(
                         "The tangent can only be set to 0.0,0.0 for a control point where the robot is stopped");
@@ -940,6 +949,7 @@ public class KochanekBartelsSpline {
             if (m_next != null) {
                 m_next.updateLocationDerivatives();
             }
+            return this;
         }
 
         private void pkgComputeTangentInOut() {
@@ -1124,8 +1134,9 @@ public class KochanekBartelsSpline {
          *                  you set the time of the second control point to 1.1: then without propagation only
          *                  the second control point time will be modified as (0.0, 1.1, 2.0, 3.0); with propagation
          *                  the following control points will also be shifted by 0.1 as (0.0, 1.1, 2.1, 3.1).
+         * @return Returns this control point.
          */
-        public void setTime(double time, boolean propagate) {
+        public ControlPoint setTime(double time, boolean propagate) {
             if (null == m_last) {
                 throw new IllegalArgumentException("The time of the first control point cannot be reset.");
             }
@@ -1158,6 +1169,7 @@ public class KochanekBartelsSpline {
                     scheduledAction = scheduledAction.next;
                 }
             }
+            return this;
         }
 
         /**
@@ -1697,7 +1709,8 @@ public class KochanekBartelsSpline {
         newControlPoint.setTangent(0.0, 0.0);
         newControlPoint.setRotationSpeed(0.0);
         newControlPoint.setFieldHeading(new AngleD(fieldHeading));
-        if ((null != newControlPoint.getLast().getLast()) &&
+        if ((null != newControlPoint.getLast()) &&
+                (null != newControlPoint.getLast().getLast()) &&
                 !newControlPoint.getLast().isRobotStopped()) {
             newControlPoint.getLast().resetDerivative();
         }
