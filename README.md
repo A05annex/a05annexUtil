@@ -1,4 +1,4 @@
-* **version:** 2025.0.1
+* **version:** 2025.0.3
 * **status:** released (first release version: 0.8.5)
 * **comments:** We have been using this library for robot development since December 2020, and
 believe it is ready for general use.
@@ -52,7 +52,7 @@ There are a couple paths for inclusion.
 Simply add it to the dependencies section of your `gradle.build` file as:
 ```
 dependencies {
-    implementation 'org.a05annex:a05annexUtil:2025.0.1'
+    implementation 'org.a05annex:a05annexUtil:2025.0.3'
      .
      .
      .
@@ -67,18 +67,28 @@ The next most simple way to use **a05annexUtil**, following the advice from this
 [chiefdelphi post](https://www.chiefdelphi.com/t/adding-my-teams-library-as-a-vendor-library/339626)
 and advises you:
 * create a `libs` folder in your robot project
-* copy the `a05annxUtil-2025.0.2.jar` file from the github 2025.0.2 release into that `libs` folder
+* copy the `a05annxUtil-2025.0.3.jar` file from the github 2025.0.3 release into that `libs` folder
 * in the dependencies section of the `build.gradle` file add the line:  
   `implementation fileTree(dir: 'libs', include: ['*.jar'])`
-* add the `libs/a05annxUtil-2025.0.2.jar` to **git** so it is saved as part of your project.
+* add the `libs/a05annxUtil-2025.0.3.jar` to **git** so it is saved as part of your project.
 
 The disadvantage of this method is that you must manually download the library and
 put it in your project, you also need to check for version updates.
 
 ## Release Notes
 
-* version 2025.0.2 - 8-Jan 2025
-  * `KochanekBartelsSpline` modifications to better support Server Path Planner and other path
+* version 2025.0.3 - ?-Feb 2025
+  * `KochanekBartelsSpline` modifications to better support Swerve Path Planner and other path
+    editing UIs - specifically, adding a scheduled command type that takes control of the drive
+    to move the robot (usually using April Tags) to a specific spot on the field for scoring or
+    pickup:
+    * added a `KochanekBartelsSpline.RobotAction` class. This includes support classes for command
+      instantiation argument lists and support for a scheduled command that assumes swerve control
+      until the next control point (the path gets the robot into visioning targeting range, and
+      the vision targeting guides to robot to pickup/score, leaving the robot stopped at
+      the next control point).
+* version 2025.0.2 - 27-Jan 2025
+  * `KochanekBartelsSpline` modifications to better support Swerve Path Planner and other path
     editing UIs:
     * added a `ControlPoint.isRobotStopped()` method to test whether this is a control point
       where the robot is forced to be stopped (path start, path end, and where a *stop and run*

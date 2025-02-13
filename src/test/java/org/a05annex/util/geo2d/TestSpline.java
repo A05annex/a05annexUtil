@@ -329,6 +329,20 @@ public class TestSpline {
 
     }
 
+    @Test
+    @DisplayName("Verify ControlPoint.isRobotStopped()")
+    void testSet3_verifyIsRobotStopped() {
+        // there is an acceleration segment before the first point in the constant speed path
+        // of this path
+        assertTrue(adjustTimeTestPoints.get(0).getLast().isRobotStopped());
+        assertFalse(adjustTimeTestPoints.get(0).isRobotStopped());
+        assertFalse(adjustTimeTestPoints.get(1).isRobotStopped());
+        assertFalse(adjustTimeTestPoints.get(2).isRobotStopped());
+        assertFalse(adjustTimeTestPoints.get(3).isRobotStopped());
+        assertTrue(adjustTimeTestPoints.get(3).getNext().isRobotStopped());
+
+    }
+
     // -----------------------------------------------------------------------------------------------------------------
     // Tests control point insert and delete operations (add has already been exhaustively tested)
     // -----------------------------------------------------------------------------------------------------------------
@@ -449,6 +463,7 @@ public class TestSpline {
         assertEquals(KochanekBartelsSpline.RobotActionType.STOP_AND_RUN_COMMAND, action.actionType);
         assertEquals(actionCommand, action.command);
         assertEquals(approxDuration, action.approxDuration);
+        assertTrue(controlPoints.get(1).isRobotStopped());
         assertEquals(0.0, controlPoints.get(1).getRawTangentX());
         assertEquals(0.0, controlPoints.get(1).getRawTangentY());
         // Remove the action and confirm things go back to pretty normal (we saved the default implementation
@@ -457,6 +472,7 @@ public class TestSpline {
         assertNull(controlPoints.get(1).getRobotAction());
         assertEquals(defaultFreeXDerivative, controlPoints.get(1).getRawTangentX());
         assertEquals(0.0, controlPoints.get(1).getRawTangentY());
+        assertFalse(controlPoints.get(1).isRobotStopped());
     }
 
 }
