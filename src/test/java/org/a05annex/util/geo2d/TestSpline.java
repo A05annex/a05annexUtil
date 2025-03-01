@@ -454,15 +454,15 @@ public class TestSpline {
         double defaultFreeXDerivative = controlPoints.get(1).getRawTangentX();
 
         // Add an action to the second control point. Verify this resets the robot velocity to zero so
-        // derive control can hand aff to the action we re stopping for
+        // we can hand off control of the drive to the action we are stopping for.
         String actionCommand = "TestCommand";
         double approxDuration = 2.0;
         controlPoints.get(1).setRobotAction(actionCommand, approxDuration);
         KochanekBartelsSpline.RobotAction action = controlPoints.get(1).getRobotAction();
         assertNotNull(action);
         assertEquals(KochanekBartelsSpline.RobotActionType.STOP_AND_RUN_COMMAND, action.actionType);
-        assertEquals(actionCommand, action.command);
-        assertEquals(approxDuration, action.approxDuration);
+        assertEquals(actionCommand, action.getCommand());
+        assertEquals(approxDuration, action.getApproxDuration());
         assertTrue(controlPoints.get(1).isRobotStopped());
         assertEquals(0.0, controlPoints.get(1).getRawTangentX());
         assertEquals(0.0, controlPoints.get(1).getRawTangentY());

@@ -17,6 +17,7 @@ import java.util.*;
 
 
 import static org.a05annex.util.JsonSupport.*;
+import static org.a05annex.util.JsonSupport.parseString;
 
 /**
  * This is an implementation of the
@@ -165,7 +166,7 @@ public class KochanekBartelsSpline {
     /**
      * This is a time-sorted linked list of actions to be scheduled at specific times along the path.
      */
-    private final ScheduledActionList scheduledActions = new ScheduledActionList();
+    private final ScheduledActionList scheduledActions = new ScheduledActionList(this);
 
     // -----------------------------------------------------------------------------------------------------------------
     // Robot actions - either:
@@ -249,7 +250,18 @@ public class KochanekBartelsSpline {
             this.argClass = ARG_TYPES.get(argType);
             this.setValue(valueString);
         }
-
+        public RobotActionArg(JSONObject json) {
+            String argType = parseString(json, ROBOT_ACTION_ARG_TYPE,null);
+            this.argType = argType;
+            this.argClass = ARG_TYPES.get(argType);
+            this.setValue(parseString(json, ROBOT_ACTION_ARG_VALUE, null));
+        }
+        JSONObject toJSON() {
+            JSONObject jsonArg = new JSONObject();
+            jsonArg.put(ROBOT_ACTION_ARG_TYPE,argType);
+            jsonArg.put(ROBOT_ACTION_ARG_VALUE,valueString);
+            return jsonArg;
+        }
         void setValue(String valueString) {
              if (null != valueString) {
                  // OK, this is really ugly:
@@ -316,6 +328,9 @@ public class KochanekBartelsSpline {
          *     to the {@link RobotActionType} documentation for details;</li>
          *     <li>{@link RobotActionType#SCHEDULE_COMMAND}: schedule a command to run concurrently
          *     with path following. Refer to the {@link RobotActionType} documentation for details.</li>
+         *     <li>{@link RobotActionType#RELINQUISH_DRIVE_TO_COMMAND}: schedule a command to take control of the
+         *     robot drive and leave the robot at the next control point for path following to resume. Refer
+         *     to the {@link RobotActionType} documentation for details.</li>
          * </ul>
          */
         public final RobotActionType actionType;
@@ -323,23 +338,23 @@ public class KochanekBartelsSpline {
          * The action class. It is assumed the action is a command in the <code>frc.robot.commands</code> of
          * a typical wpilib project with a no-argument constructor.
          */
-        public final String command;
+        private String command;
         /**
          *
          */
-        List<RobotActionArg> m_robotActionArgs = new ArrayList<RobotActionArg>();
+        final private List<RobotActionArg> m_robotActionArgs = new ArrayList<RobotActionArg>();
         /**
          * An approximate duration for a {@link RobotActionType#STOP_AND_RUN_COMMAND} {@link #command}. This is
          * used for path planning only. In competition the actual duration of the command may vary widely subject
          * to the demands of the competition. This field is meaningless for a
          * {@link RobotActionType#SCHEDULE_COMMAND} and should be set to {@code 0.0}.
          */
-        public final double approxDuration;
+        private double approxDuration;
         /**
          * The time along the path where this {@link RobotActionType#SCHEDULE_COMMAND} command should be
          * scheduled. This field is meaningless for a {@link RobotActionType#STOP_AND_RUN_COMMAND}.
          */
-        double pathTime;
+        private double pathTime;
 
         /**
          * Instantiate a scheduled command action that should be started while the robot is following the path
@@ -418,10 +433,10 @@ public class KochanekBartelsSpline {
             // OK, the RobotAction description is created, deal with instantiation arguments
             JSONArray robotActionArgs = getJSONArray(json, ROBOT_ACTION_ARGS, false);
             if (null != robotActionArgs) {
-                for (Object cpObj : robotActionArgs) {
-//                JSONObject cpJson = (JSONObject) cpObj;
-//                ControlPoint newControlPoint = new ControlPoint(this, cpJson);
-//                appendControlPoint(newControlPoint);
+                for (Object argObj : robotActionArgs) {
+                    JSONObject argJson = (JSONObject) argObj;
+                    RobotActionArg arg = new RobotActionArg(argJson);
+                    appendArgument(arg);
                 }
             }
         }
@@ -433,13 +448,51 @@ public class KochanekBartelsSpline {
             jsonRobotAction.put(ROBOT_ACTION_DURATION, approxDuration);
             jsonRobotAction.put(ROBOT_SCHEDULED_ACTION_TIME, pathTime);
             // serialize the command instantiation arguments if there are any
+            JSONArray argsJson = new JSONArray();
+            jsonRobotAction.put(ROBOT_ACTION_ARGS, argsJson);
+            for (RobotActionArg arg : m_robotActionArgs) {
+                argsJson.add(arg.toJSON());
+            }
+
+        }
+
+        /**
+         * Get the command class name.
+         *
+         * @return Return the command class name.
+         */
+        public String getCommand() {
+            return command;
+        }
+
+        /**
+         * Set the command class name.
+         *
+         * @param command The new command class name
+         */
+        public void setCommand(String command) {
+            this.command = command;
+        }
+
+        public double getPathTime() {
+            return pathTime;
+        }
+        public void setPathTime(double pathTime) {
+            this.pathTime = pathTime;
+        }
+
+        public double getApproxDuration() {
+            return approxDuration;
+        }
+        public void setApproxDuration(double approxDuration) {
+            this.approxDuration = approxDuration;
         }
 
         /**
          *
          * @param robotActionArg
          */
-        void appendArgument(RobotActionArg robotActionArg) {
+        public void appendArgument(RobotActionArg robotActionArg) {
             m_robotActionArgs.add(robotActionArg);
         }
 
@@ -448,7 +501,7 @@ public class KochanekBartelsSpline {
          * @param index
          * @param robotActionArg
          */
-        void insertArgument(int index, RobotActionArg robotActionArg){
+        public void insertArgument(int index, RobotActionArg robotActionArg){
             m_robotActionArgs.add(index, robotActionArg);
         }
 
@@ -457,7 +510,7 @@ public class KochanekBartelsSpline {
          * @param index
          * @return
          */
-        RobotActionArg deleteArgument(int index) {
+        public RobotActionArg deleteArgument(int index) {
             return m_robotActionArgs.remove(index);
         }
 
@@ -470,7 +523,7 @@ public class KochanekBartelsSpline {
          *              must be greater than 0 and less than the length of the argument list.
          * @throws IndexOutOfBoundsException
          */
-        void moveArgumentUp(int index) {
+        public void moveArgumentUp(int index) {
             if (index <= 0) {
                 throw new IndexOutOfBoundsException(
                         String.format("The argument at index %d or less cannot be moved up in the argument list,",
@@ -487,17 +540,17 @@ public class KochanekBartelsSpline {
          *
          * @param index
          */
-        void moveArgumentDown(int index) {
+        public void moveArgumentDown(int index) {
 
         }
-        Class<?>[] getArgTypeArray() {
+        public Class<?>[] getArgTypeArray() {
             ArrayList<Class<?>> argTypes = new ArrayList<>();
             for(RobotActionArg arg : m_robotActionArgs) {
                 argTypes.add(arg.argClass);
             }
             return argTypes.toArray(new Class<?>[m_robotActionArgs.size()]);
         }
-        Object[] getArgValueArray() {
+        public Object[] getArgValueArray() {
             ArrayList<Object> argValues = new ArrayList<>();
             for(RobotActionArg arg : m_robotActionArgs) {
                 argValues.add(arg.value);
@@ -513,17 +566,35 @@ public class KochanekBartelsSpline {
 
         class ScheduledAction {
             final RobotAction robotAction;
+            final ControlPoint followingCtrlPt;
             private ScheduledAction next = null;
 
-            private ScheduledAction(@NotNull RobotAction robotAction, ScheduledAction next) {
+            private ScheduledAction(@NotNull RobotAction robotAction, @Nullable ControlPoint followingCtrlPt,
+                                    @Nullable ScheduledAction next ) {
                 this.robotAction = robotAction;
+                this.followingCtrlPt = followingCtrlPt;
                 this.next = next;
+                if (RobotActionType.RELINQUISH_DRIVE_TO_COMMAND == robotAction.actionType) {
+                    followingCtrlPt.endsDriveAction(this);
+                }
             }
         }
 
+        /**
+         * A back pointer to the spline that owns this scheduled action list. Used by the
+         * {@link RobotActionType#RELINQUISH_DRIVE_TO_COMMAND} to connect the command to the control
+         * point where the path follower resumes control of the drive.
+         */
+        private final KochanekBartelsSpline spline;
+        /**
+         * The head of a list of {@link ScheduledAction}s that are ordered along the path from
+         * start to finish.
+         */
         private ScheduledAction head = null;
 
-        ScheduledActionList() {  }
+        ScheduledActionList(KochanekBartelsSpline spline) {
+            this.spline = spline;
+        }
 
         ScheduledAction getHead() {
             return head;
@@ -533,18 +604,41 @@ public class KochanekBartelsSpline {
             return scheduleAction(new RobotAction(pathTime, command));
         }
 
+        RobotAction scheduleAction(double pathTime, @NotNull String command, double approxDuration) {
+            return scheduleAction(new RobotAction(pathTime, command, approxDuration));
+        }
+
         RobotAction scheduleAction(RobotAction robotAction) {
+            // There is a special case for a RELINQUISH_DRIVE_TO_COMMAND where the action gets linked to the
+            // following control point, which is the field position the robot should be in when the command completes
+            // and path following takes over.
+            ControlPoint followingCtrlPt = null;
+            if (RobotActionType.RELINQUISH_DRIVE_TO_COMMAND == robotAction.actionType) {
+                for (ControlPoint ctrlPt : spline.getControlPoints()) {
+                    if (ctrlPt.m_time < robotAction.pathTime) {
+                        continue;
+                    }
+                    followingCtrlPt = ctrlPt;
+                    break;
+                }
+                if (null == followingCtrlPt) {
+                    throw new IllegalArgumentException(
+                            String.format("A RobotActionType.RELINQUISH_DRIVE_TO_COMMAND action cannot be" +
+                                    " scheduled at time %.3f, no following control point.", robotAction.pathTime));
+                }
+            }
+
             if ((null == head) || (robotAction.pathTime < head.robotAction.pathTime)) {
                 // the first one, this is easy.
-                head = new ScheduledAction(robotAction, head);
+                head = new ScheduledAction(robotAction, followingCtrlPt,null);
             } else {
                 // step through the list until you find the right insertion point.
                 ScheduledAction currentAction = head;
-                while (null != currentAction) {
+                while (true) {
                     if ((null == currentAction.next) || (currentAction.next.robotAction.pathTime > robotAction.pathTime)) {
                         // this action should be scheduled after the currentAction and before the
                         // next action.
-                        currentAction.next = new ScheduledAction(robotAction, currentAction.next);
+                        currentAction.next = new ScheduledAction(robotAction, followingCtrlPt, currentAction.next);
                         break;
                     }
                     currentAction = currentAction.next;
@@ -563,6 +657,9 @@ public class KochanekBartelsSpline {
                 if ((nextScheduledAction.robotAction.pathTime == robotAction.pathTime) &&
                         (nextScheduledAction.robotAction.command.equals(robotAction.command))) {
                     // this is the action to delete
+                    if (null != nextScheduledAction.followingCtrlPt) {
+                        nextScheduledAction.followingCtrlPt.endsDriveAction(null);
+                    }
                     if (null == lastScheduledAction) {
                         head = nextScheduledAction.next;
                     } else {
@@ -743,6 +840,8 @@ public class KochanekBartelsSpline {
         double m_dHeading = 0.0;
         // This is a robot action to stop at this control point and do something
         RobotAction m_robotAction = null;
+        //
+        ScheduledActionList.ScheduledAction m_endsDriveAction = null;
         // These are never saved, they are always computed based on the saved tangents and the times of this
         // point and the surrounding points.
         double m_dXin = 0.0;
@@ -1305,6 +1404,19 @@ public class KochanekBartelsSpline {
             }
         }
 
+        public void endsDriveAction(@Nullable ScheduledActionList.ScheduledAction driveAction) {
+            m_endsDriveAction = driveAction;
+            if (null != driveAction) {
+                // Here we are stopped at the end of the action tha took control of the drive
+                setTangent(0.0, 0.0);    // we are not moving
+                setRotationSpeed(0.0);
+            } else {
+                // This is releasing the action that took control of the drive, so the derivatives go back the
+                // default computations of the derivatives
+                resetDerivative();
+            }
+        }
+
         /**
          * Test whether the robot is stopped at this control point. If the robot is
          * stopped, there is no tangent at this control point. The robot is stopped
@@ -1313,9 +1425,10 @@ public class KochanekBartelsSpline {
          * @return {@code true} if the robot is stopped at this control point, {@code false} otherwise.
          */
         public boolean isRobotStopped() {
-            return ((null != m_robotAction) ||  // stop and execute action
-                    (null == m_last) ||         // the first point on the path
-                    (null == m_next));          // the last point on the path
+            return ((null != m_robotAction) ||      // stop and execute action
+                    (null != m_endsDriveAction) ||    // stop at the end of an action that takes control of the drive
+                    (null == m_last) ||             // the first point on the path
+                    (null == m_next));              // the last point on the path
         }
 
         /**
@@ -1941,6 +2054,9 @@ public class KochanekBartelsSpline {
 
     public RobotAction scheduleCommand(double pathTime, @NotNull String command) {
         return scheduledActions.scheduleAction(pathTime, command);
+    }
+    public RobotAction scheduleCommand(double pathTime, @NotNull String command, double approxDuration) {
+        return scheduledActions.scheduleAction(pathTime, command, approxDuration);
     }
 
     public boolean deleteScheduledCommand(@NotNull RobotAction robotAction) {
