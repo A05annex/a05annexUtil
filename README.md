@@ -1,4 +1,4 @@
-* **version:** 2025.0.3
+* **version:** 2025.0.4
 * **status:** released (first release version: 0.8.5)
 * **comments:** We have been using this library for robot development since December 2020, and
 believe it is ready for general use.
@@ -52,7 +52,7 @@ There are a couple paths for inclusion.
 Simply add it to the dependencies section of your `gradle.build` file as:
 ```
 dependencies {
-    implementation 'org.a05annex:a05annexUtil:2025.0.3'
+    implementation 'org.a05annex:a05annexUtil:2025.0.4'
      .
      .
      .
@@ -67,17 +67,21 @@ The next most simple way to use **a05annexUtil**, following the advice from this
 [chiefdelphi post](https://www.chiefdelphi.com/t/adding-my-teams-library-as-a-vendor-library/339626)
 and advises you:
 * create a `libs` folder in your robot project
-* copy the `a05annxUtil-2025.0.3.jar` file from the github 2025.0.3 release into that `libs` folder
+* copy the `a05annxUtil-2025.0.4.jar` file from the github 2025.0.3 release into that `libs` folder
 * in the dependencies section of the `build.gradle` file add the line:  
   `implementation fileTree(dir: 'libs', include: ['*.jar'])`
-* add the `libs/a05annxUtil-2025.0.3.jar` to **git** so it is saved as part of your project.
+* add the `libs/a05annxUtil-2025.0.4.jar` to **git** so it is saved as part of your project.
 
 The disadvantage of this method is that you must manually download the library and
 put it in your project, you also need to check for version updates.
 
 ## Release Notes
 
-* version 2025.0.3 - ?-Feb 2025
+* version 2025.0.4 - 10-Mar-2025
+  * `KochanekBartelsSpline` instantiation arguments are now fully supported and practically tested
+    for robot actions. Full unit testing is still required. All methods to support interactive editing
+    have not yet been implemented.
+* version 2025.0.3 - 1-Mar-2025
   * `KochanekBartelsSpline` modifications to better support Swerve Path Planner and other path
     editing UIs - specifically, adding a scheduled command type that takes control of the drive
     to move the robot (usually using April Tags) to a specific spot on the field for scoring or
@@ -87,7 +91,7 @@ put it in your project, you also need to check for version updates.
       until the next control point (the path gets the robot into visioning targeting range, and
       the vision targeting guides to robot to pickup/score, leaving the robot stopped at
       the next control point).
-* version 2025.0.2 - 27-Jan 2025
+* version 2025.0.2 - 27-Jan-2025
   * `KochanekBartelsSpline` modifications to better support Swerve Path Planner and other path
     editing UIs:
     * added a `ControlPoint.isRobotStopped()` method to test whether this is a control point
@@ -95,7 +99,7 @@ put it in your project, you also need to check for version updates.
       command is scheduled).
     * added checking in control point addition, deletion, and insertion to properly set the
       derivatives for a point where the robot should be stopped.
-* version 2025.0.1 - 8-Jan 2025
+* version 2025.0.1 - 8-Jan-2025
   * changed the versioning to be consistent with WPI versioning.
   * Added Util.setOnce(...) to allow setting library constants from the robot code
   * Added Util.instantiateObjectFromName(...) for better support of season extension with

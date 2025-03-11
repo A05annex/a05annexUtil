@@ -24,7 +24,7 @@ test {
 
 sourceCompatibility = '1.9'
 targetCompatibility = '1.9'
-version = '2025.0.3'
+version = '2025.0.4'
 group = 'org.a05annex'
 
 java {
