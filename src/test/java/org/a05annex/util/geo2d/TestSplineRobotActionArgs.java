@@ -1,7 +1,6 @@
 package org.a05annex.util.geo2d;
 
 import org.a05annex.util.geo2d.KochanekBartelsSpline.*;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
@@ -11,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @RunWith(JUnitPlatform.class)
-public class TestSplineCmdArgs {
+public class TestSplineRobotActionArgs {
     // -----------------------------------------------------------------------------------------------------------------
     // This first set of tests is for the instantiation argument class
     // -----------------------------------------------------------------------------------------------------------------
