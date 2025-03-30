@@ -357,7 +357,8 @@ public class KochanekBartelsSpline {
         private double pathTime;
 
         /**
-         * Instantiate a scheduled command action that should be started while the robot is following the path
+         * Instantiate a scheduled command action, {@link RobotActionType#SCHEDULE_COMMAND}, that should be started
+         * while the robot is following the path
          * and performed in parallel with path following. This is typically used for starting/stopping
          * collectors while the robot is moving towards a game piece on the ground.
          *
@@ -372,7 +373,8 @@ public class KochanekBartelsSpline {
         }
 
         /**
-         * Instantiate stop and run command - which will be associated with a control point
+         * Instantiate stop and run command, {@link RobotActionType#STOP_AND_RUN_COMMAND}, which
+         * will be associated with a control point
          * at which the robot is stopped so it can run this command. This is typically used when the
          * robot has a game piece and is in a position to shoot. Typically, the only robot motion associated
          * with this command is rotational aiming.
@@ -390,7 +392,8 @@ public class KochanekBartelsSpline {
 
         /**
          * Instantiate a command that takes control of the drive of a robot that is following a path for autonomous
-         * targeting and scoring. Specifically, the path has taken the robot close enough to the target that control
+         * targeting and scoring, {@link RobotActionType#RELINQUISH_DRIVE_TO_COMMAND}. Specifically, the path
+         * has taken the robot close enough to the target that control
          * can be turned over to a command using the april tags to position the robot for either pickup or scoring,
          * which will leave the robot stopped at the next control point on the path when the action completes, and path
          * following will restart fom there.
@@ -409,7 +412,7 @@ public class KochanekBartelsSpline {
 
         /**
          * Instantiate a RobotAction from the JASON serialized RobotDescription.
-         * @param json
+         * @param json The JSON serialized description.
          */
         RobotAction(@NotNull JSONObject json) {
             // HISTORY: Robot actions were added about 4 years ago. They were initially very simple,
@@ -441,7 +444,11 @@ public class KochanekBartelsSpline {
             }
         }
 
-        void toJson(JSONObject jsonRobotAction) {
+        /**
+         * Serialize a {@link RobotAction} to a {@link JSONObject}.
+         * @param jsonRobotAction The JSON object.
+         */
+        void toJson(@NotNull JSONObject jsonRobotAction) {
             // serialize the basic info
             jsonRobotAction.put(ROBOT_ACTION_TYPE, actionType.getName());
             jsonRobotAction.put(ROBOT_ACTION_COMMAND, command);
@@ -474,41 +481,84 @@ public class KochanekBartelsSpline {
             this.command = command;
         }
 
+        /**
+         * Get the command path time. NOTE: {@link RobotActionType#STOP_AND_RUN_COMMAND}s are bound to
+         * control points, so, setting the  The and it is invalid
+         * @return Returns the path time when this
+         */
         public double getPathTime() {
             return pathTime;
         }
+
+        /**
+         * Set the command path time. NOTE: {@link RobotActionType#STOP_AND_RUN_COMMAND}s are associated with
+         * a control point and it is invalid
+         * @param pathTime The path time.
+         */
         public void setPathTime(double pathTime) {
             this.pathTime = pathTime;
         }
 
+        /**
+         * Get the approximate duration for a {@link RobotAction}. Note that this is a value used in path planning
+         * only, and that it will always return -1.0 for a {@link RobotActionType#SCHEDULE_COMMAND} because in has no
+         * meaning in that context.
+         * @return The approximate duration of the command.
+         */
         public double getApproxDuration() {
             return approxDuration;
         }
-        public void setApproxDuration(double approxDuration) {
-            this.approxDuration = approxDuration;
+
+        /**
+         * Test whether it is valid to set an approximate duration for this {@link RobotActionType}
+         * @return {@code true} if a duration can be set, {@code false} otherise.
+         */
+        public boolean canResetApproxDuration() {
+            return ((actionType == RobotActionType.STOP_AND_RUN_COMMAND ||
+                    actionType == RobotActionType.RELINQUISH_DRIVE_TO_COMMAND));
         }
 
         /**
-         *
-         * @param robotActionArg
+         * et an approximate duration for this command.
+         * @param approxDuration The approximate duration in seconds, must be &gt; 0.0.
+         * @throws IllegalStateException Thrown if this is a {@link RobotActionType#SCHEDULE_COMMAND}, for which
+         *  setting the approximate duration is an invalid operation.
+         * @throws IllegalArgumentException Thrown if {@code approxDuration} is &le; 0.0.
          */
-        public void appendArgument(RobotActionArg robotActionArg) {
+        public void setApproxDuration(double approxDuration) {
+            if (canResetApproxDuration()) {
+                if (approxDuration <= 0.0) {
+                    throw new IllegalArgumentException("approxDuration must be greater that 0.0");
+                }
+                this.approxDuration = approxDuration;
+            } else {
+                throw new IllegalStateException(String.format(
+                        "It is invalid to set the duration of a '%s' RobotAction.",actionType.getName()));
+            }
+        }
+
+        /**
+         * Append a new argument to the instantiation argument list.
+         * @param robotActionArg The argument to append.
+         */
+        public void appendArgument(@NotNull RobotActionArg robotActionArg) {
             m_robotActionArgs.add(robotActionArg);
         }
 
         /**
-         *
-         * @param index
-         * @param robotActionArg
+         * Insert and argument at the specified {@code index} in an argument list.
+         * @param index The index for argument insertion.
+         * @param robotActionArg The argument to be inserted.
          */
-        public void insertArgument(int index, RobotActionArg robotActionArg){
+        public void insertArgument(int index, @NotNull RobotActionArg robotActionArg){
             m_robotActionArgs.add(index, robotActionArg);
         }
 
         /**
-         *
-         * @param index
-         * @return
+         * Delete the argument at the specified index in an argument list.
+         * @param index The index for argument deletion
+         * @return Returns the argument being deleted.
+         * @throws IndexOutOfBoundsException – if the index is out of range (index &lt; 0 || index &ge; size())
          */
         public RobotActionArg deleteArgument(int index) {
             return m_robotActionArgs.remove(index);
@@ -520,29 +570,48 @@ public class KochanekBartelsSpline {
          * in the argument list.
          *
          * @param index The index of argument you want to move up in the list. The value of this index
-         *              must be greater than 0 and less than the length of the argument list.
-         * @throws IndexOutOfBoundsException
+         *              must be &gt; 0 and &lt; the length of the argument list.
+         * @throws IndexOutOfBoundsException Thrown if the {@code index} is not an argument that can be moved up
+         *              in the argument list (i.e. it is an invalid argument index; or, it is the head argument, so
+         *              there is nothing to mvoe it before.
          */
         public void moveArgumentUp(int index) {
             if (index <= 0) {
                 throw new IndexOutOfBoundsException(
-                        String.format("The argument at index %d or less cannot be moved up in the argument list,",
+                        String.format("The argument at index %d does not exist, or cannot be moved up.",
                                 index));
             } else if (index >= m_robotActionArgs.size()) {
                 throw new IndexOutOfBoundsException(
-                        String.format("Index %d does not exist in the argument list", index));
+                        String.format("Index %d does not exist in the argument list.", index));
             }
             RobotActionArg deletedArg = deleteArgument(index);
             insertArgument(index-1, deletedArg);
         }
 
         /**
+         * This is a method to support interactive editing of an argument list when
+         * a user is refactoring the arguments and wants to move an argument down (towards the end)
+         * in the argument list.
          *
-         * @param index
+         * @param index The index of argument you want to move down in the list. The value of this index
+         *              must be &ge; 0 and &lt; (the length of the argument list - 1).
+         * @throws IndexOutOfBoundsException Thrown if the {@code index} is not an argument that can be moved down
+         *              in the argument list (i.e. it is an invalid argument index; or, it is the last argument, so
+         *              there is nothing to move it after.
          */
         public void moveArgumentDown(int index) {
-
+            if (index < 0) {
+                throw new IndexOutOfBoundsException(
+                        String.format("The argument at index %d does not exist.",
+                                index));
+            } else if (index >= m_robotActionArgs.size() - 1) {
+                throw new IndexOutOfBoundsException(
+                        String.format("Index %d does not exist, or is at the and and cannot be moved down", index));
+            }
+            RobotActionArg deletedArg = deleteArgument(index);
+            insertArgument(index+1, deletedArg);
         }
+
         public Class<?>[] getArgTypeArray() {
             ArrayList<Class<?>> argTypes = new ArrayList<>();
             for(RobotActionArg arg : m_robotActionArgs) {
@@ -550,6 +619,7 @@ public class KochanekBartelsSpline {
             }
             return argTypes.toArray(new Class<?>[m_robotActionArgs.size()]);
         }
+
         public Object[] getArgValueArray() {
             ArrayList<Object> argValues = new ArrayList<>();
             for(RobotActionArg arg : m_robotActionArgs) {

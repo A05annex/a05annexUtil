@@ -67,7 +67,7 @@ The next most simple way to use **a05annexUtil**, following the advice from this
 [chiefdelphi post](https://www.chiefdelphi.com/t/adding-my-teams-library-as-a-vendor-library/339626)
 and advises you:
 * create a `libs` folder in your robot project
-* copy the `a05annxUtil-2025.0.4.jar` file from the github 2025.0.5 release into that `libs` folder
+* copy the `a05annxUtil-2025.0.5.jar` file from the github 2025.0.5 release into that `libs` folder
 * in the dependencies section of the `build.gradle` file add the line:  
   `implementation fileTree(dir: 'libs', include: ['*.jar'])`
 * add the `libs/a05annxUtil-2025.0.5.jar` to **git** so it is saved as part of your project.
@@ -78,6 +78,8 @@ put it in your project, you also need to check for version updates.
 ## Release Notes
 
 * version 2025.0.5 - ??-Mar-2025
+  * `KochanekBartelsSpline` completion, documenting, and testing of methods to support display and editing
+    `RobotActionArgs`
 * version 2025.0.4 - 10-Mar-2025
   * `KochanekBartelsSpline` instantiation arguments are now fully supported and practically tested
     for robot actions. Full unit testing is still required. All methods to support interactive editing
