@@ -133,6 +133,17 @@ public class TestSplineRobotActionArgs {
         action.appendArgument(STRING_ARG);
         action.appendArgument(BOOLEAN_ARG);
         action.appendArgument(INTEGER_ARG);
+        // test the basic list functiosn
+        assertEquals(3, action.getActionArgCt());
+        assertEquals(STRING_ARG_VALUE, action.getActionArg(0).getValueString());
+        assertEquals(BOOLEAN_ARG_STRING_VALUE, action.getActionArg(1).getValueString());
+        assertEquals(INTEGER_ARG_STRING_VALUE, action.getActionArg(2).getValueString());
+        int index = 0;
+        for (RobotActionArg robotActionArg : action.getActionArgs()) {
+            assertEquals(robotActionArg, action.getActionArg(index));
+            index++;
+        }
+        assertEquals(3, index);
         return action;
 
     }
@@ -141,6 +152,7 @@ public class TestSplineRobotActionArgs {
     @DisplayName("RobotAction append arg")
     void testRobotActionAppendArg() {
         RobotAction action = getRefAction();
+        assertEquals(3, action.getActionArgCt());
         Class<?>[] actionArgTypes = action.getArgTypeArray();
         Object[] actionArgValues = action.getArgValueArray();
         assertEquals(3, actionArgTypes.length);
@@ -248,5 +260,36 @@ public class TestSplineRobotActionArgs {
         RobotAction action = getRefAction();
         IndexOutOfBoundsException exception = assertThrows(IndexOutOfBoundsException.class,
                 () -> action.moveArgumentUp(3));
+    }
+    @Test
+    @DisplayName("RobotAction move argument down")
+    void testRobotActionArgMoveDown() {
+        RobotAction action = getRefAction();
+        action.moveArgumentDown(0);
+        // test the args after the move up
+        Class<?>[] actionArgTypes = action.getArgTypeArray();
+        Object[] actionArgValues = action.getArgValueArray();
+        assertEquals(3, actionArgTypes.length);
+        assertEquals(3, actionArgValues.length);
+        assertEquals(RobotActionArg.ARG_TYPES.get("Boolean"), actionArgTypes[0]);
+        assertEquals(BOOLEAN_ARG_VALUE, actionArgValues[0]);
+        assertEquals(RobotActionArg.ARG_TYPES.get("String"), actionArgTypes[1]);
+        assertEquals(STRING_ARG_VALUE, actionArgValues[1]);
+        assertEquals(RobotActionArg.ARG_TYPES.get("Integer"), actionArgTypes[2]);
+        assertEquals(INTEGER_ARG_VALUE, actionArgValues[2]);
+    }
+    @Test
+    @DisplayName("RobotAction move argument down - invalid low index")
+    void testRobotActionArgMoveDownInvalidLowIndex() {
+        RobotAction action = getRefAction();
+        IndexOutOfBoundsException exception = assertThrows(IndexOutOfBoundsException.class,
+                () -> action.moveArgumentDown(-1));
+    }
+    @Test
+    @DisplayName("RobotAction move argument down - invalid high index")
+    void testRobotActionArgMoveDownInvalidHighIndex() {
+        RobotAction action = getRefAction();
+        IndexOutOfBoundsException exception = assertThrows(IndexOutOfBoundsException.class,
+                () -> action.moveArgumentDown(2));
     }
 }

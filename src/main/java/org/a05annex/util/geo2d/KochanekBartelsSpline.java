@@ -537,6 +537,18 @@ public class KochanekBartelsSpline {
             }
         }
 
+        public int getActionArgCt() {
+            return this.m_robotActionArgs.size();
+        }
+
+        public RobotActionArg getActionArg(int index) {
+            return this.m_robotActionArgs.get(index);
+        }
+
+        public Iterable<RobotActionArg> getActionArgs() {
+            return this.m_robotActionArgs;
+        }
+
         /**
          * Append a new argument to the instantiation argument list.
          * @param robotActionArg The argument to append.
@@ -630,15 +642,41 @@ public class KochanekBartelsSpline {
     }
 
     /**
-     * This is a linked list of schedule commands ordered by when they should be scheduled in path time.
+     * This is a linked list of schedule commands ordered by when they should be scheduled in path time. In this case
+     * <i>scheduled</i> means scheduled on the {@code CommandScheduler} if the action is a
+     * {@link RobotActionType#SCHEDULE_COMMAND} and executed as the path following command (in cooperation with the
+     * path real swerve path following command) if the action is a {@link RobotActionType#RELINQUISH_DRIVE_TO_COMMAND}
      */
     class ScheduledActionList {
 
+        /**
+         * This is the description of a scheduled action and includes:
+         * <ul>
+         *     <li>The {@link RobotAction} describing the robot action<,/li>
+         *     <li>The {@link ControlPoint} following the {@link RobotAction}, used only if the {@link RobotAction}
+         *     is a {@link RobotActionType#RELINQUISH_DRIVE_TO_COMMAND}</li>
+         * </ul>
+         */
         class ScheduledAction {
+            /**
+             * The description of the robot action
+             */
             final RobotAction robotAction;
+            /**
+             * The control point following the robot action on the path.
+             */
             final ControlPoint followingCtrlPt;
+            /**
+             * The next action in the {@link ScheduledActionList}. {@code null} if this is the last action in the list.
+             */
             private ScheduledAction next = null;
 
+            /**
+             * Instantiate a {@link ScheduledAction}.
+             * @param robotAction The robot action description
+             * @param followingCtrlPt The control point following the robot action.
+             * @param next The next action in the list, {@code null} if this is the end of the list.
+             */
             private ScheduledAction(@NotNull RobotAction robotAction, @Nullable ControlPoint followingCtrlPt,
                                     @Nullable ScheduledAction next ) {
                 this.robotAction = robotAction;
@@ -662,6 +700,10 @@ public class KochanekBartelsSpline {
          */
         private ScheduledAction head = null;
 
+        /**
+         * Instantiate the {@link ScheduledActionList}. T
+         * @param spline
+         */
         ScheduledActionList(KochanekBartelsSpline spline) {
             this.spline = spline;
         }
