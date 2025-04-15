@@ -25,8 +25,17 @@ import org.jetbrains.annotations.NotNull;
 public class Xfm4x4d {
 
     // the axis for rotation
+    /**
+     * X axis index.
+     */
     public static final int AXIS_X = 0;
+    /**
+     * Y axis index.
+     */
     public static final int AXIS_Y = 1;
+    /**
+     * Z axis index.
+     */
     public static final int AXIS_Z = 2;
 
     private final double[][] xfm = new double[4][4];
@@ -61,6 +70,16 @@ public class Xfm4x4d {
         return this;
     }
 
+    /**
+     * Instantiate a transformation from a local axis system to a containing (global) axis system where the local
+     * origin is moved to {@code ptOrigin}, and the X axis is pointed from {@code ptOrigin} towards {@code ptAimedAt}
+     * with a roll of 0.0.
+     * @param ptOrigin The origin of the local axis system within the new axis system.
+     * @param ptAimedAt The point the local X axis is aimed at within the new axis system.
+     * @return {@code this} transformation initialized as described above.
+     * @throws ZeroLengthVectorException Thrown if {@code ptOrigin} and {@code ptAimedAt} are so close together a
+     *  meaningful direction from {@code ptOrigin} to {@code ptAimedAt} cannot be computed.
+     */
     public Xfm4x4d setValue(final Point3d ptOrigin, final Point3d ptAimedAt) throws ZeroLengthVectorException {
         identity();
         // set temp vector - from the origin to the aimedAt point
@@ -206,6 +225,18 @@ public class Xfm4x4d {
         return rotate(nAxis, fSin, fCos);
     }
 
+    /**
+     * Premultiply this transformation by a rotation transformation for the specified rotation about the specified axis.
+     * <p>
+     * If you want to set this transformation to be the rotation transformation,
+     * set this transformation to be an identity transformation before applying the rotation.
+     *
+     * @param nAxis The axis of rotation: {@link Xfm4x4d#AXIS_X}, {@link Xfm4x4d#AXIS_Y},
+     *              or {@link Xfm4x4d#AXIS_Z}
+     * @param fSin The sine of the rotation angle.
+     * @param fCos The cosine of the rotation angle.
+     * @return Returns this transform after it has been premultiplied by a rotation transformation.
+     */
     public Xfm4x4d rotate(final int nAxis, final double fSin, final double fCos) {
         switch (nAxis) {
             case AXIS_X:
@@ -221,9 +252,10 @@ public class Xfm4x4d {
     }
 
     /**
+     * Apply a rotation around an arbitrary axis to {@code this} transformation.
      * @param vAxis The axis of rotation.
      * @param aRot  The angle of rotation.
-     * @return Returns the transformation with the rotation applied.
+     * @return Returns {@code this} transformation with the rotation applied.
      */
     public Xfm4x4d rotate(final Vector3d vAxis, final AngleD aRot) {
         // rotation for an arbitrary axis (from Rogers and Adams) -
@@ -426,6 +458,9 @@ public class Xfm4x4d {
         }
     }
 
+    /**
+     * Transpose a 4x4 matrix in place.
+     */
     public final void transpose() {
         double temp;
         for (int row = 0; row < 4; row++) {

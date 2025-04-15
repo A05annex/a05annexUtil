@@ -215,6 +215,10 @@ public class KochanekBartelsSpline {
             this.name = name;
         }
 
+        /**
+         * Get the name used for serializing this {@link RobotActionType}.
+         * @return The name used for serializing  this {@link RobotActionType}.
+         */
         public String getName() {
             return this.name;
         }
@@ -228,6 +232,9 @@ public class KochanekBartelsSpline {
      * </ul>
      */
     public static class RobotActionArg {
+        /**
+         * The enumeration of the types of arguments that are currently supported.
+         */
         final public static Map<String, Class> ARG_TYPES = new HashMap<>() {{
             put("String", String.class);
             put("Boolean", Boolean.class);
@@ -241,28 +248,55 @@ public class KochanekBartelsSpline {
         private String valueString = null;
         private Object value = null;
 
-        public RobotActionArg(String argType) {
+        /**
+         * Instantiate an action argument with a specified type, but no specified value.
+         * @param argType The argument type.
+         */
+        public RobotActionArg(@NotNull String argType) {
             this(argType, null);
         }
 
-        public RobotActionArg(String argType, String valueString) {
+        /**
+         * Instantiate an action argument with both a specified type and value.
+         * @param argType The argument type
+         * @param valueString The argument value.
+         */
+        public RobotActionArg(@NotNull String argType, @NotNull String valueString) {
             this.argType = argType;
             this.argClass = ARG_TYPES.get(argType);
             this.setValue(valueString);
         }
-        public RobotActionArg(JSONObject json) {
+
+        /**
+         * Instantiate an action argument from a JSON representation.
+         * @param json The JSON object representing the action argument.
+         */
+        public RobotActionArg(@NotNull JSONObject json) {
             String argType = parseString(json, ROBOT_ACTION_ARG_TYPE,null);
             this.argType = argType;
             this.argClass = ARG_TYPES.get(argType);
             this.setValue(parseString(json, ROBOT_ACTION_ARG_VALUE, null));
         }
+
+        /**
+         * Write this action argument to a JSON object.
+         * @return The JSON representation for this action argument.
+         */
         JSONObject toJSON() {
             JSONObject jsonArg = new JSONObject();
             jsonArg.put(ROBOT_ACTION_ARG_TYPE,argType);
             jsonArg.put(ROBOT_ACTION_ARG_VALUE,valueString);
             return jsonArg;
         }
-        void setValue(String valueString) {
+
+        /**
+         * Reset the value of this action argument.
+         * @param valueString The value f the action argument as a {@link String}.
+         * @throws {@link IllegalArgumentException} – if the {@code stringValue} cannot be parsed as the
+         * argument value type.
+         * @throw {@link IllegalStateException} - No value type is specified for this action argument.
+         */
+        void setValue(@NotNull String valueString) {
              if (null != valueString) {
                  // OK, this is really ugly:
                  try {
@@ -302,16 +336,32 @@ public class KochanekBartelsSpline {
              }
         }
 
+        /**
+         * Get the action argument type as a {@link String} for use in editing displays.
+         * @return The action argument type as a {@link String}.
+         */
         public String getArgType() {
             return argType;
         }
+        /**
+         * Get the action argument type as a {@link Class} for use in robot action instantiation.
+         * @return The action argument type as a {@link Class}.
+         */
         public Class getArgClass() {
             return argClass;
         }
 
+        /**
+         * Get the action argument value as a {@link String} for use in editing displays.
+         * @return The action argument value as a {@link String}.
+         */
         public String getValueString() {
             return valueString;
         }
+        /**
+         * Get the action argument value as a {@link Object} for use in robot action instantiation.
+         * @return The action argument value as a {@link Object}.
+         */
         public Object getValueObject() {
             return value;
         }
@@ -537,14 +587,27 @@ public class KochanekBartelsSpline {
             }
         }
 
+        /**
+         * Get the {@link RobotActionArg} count.
+         * @return The {@link RobotActionArg} count.
+         */
         public int getActionArgCt() {
             return this.m_robotActionArgs.size();
         }
 
+        /**
+         * Get the {@link RobotActionArg} at the specified index.
+         * @param index The index.
+         * @return The {@link RobotActionArg} at the specified index.
+         */
         public RobotActionArg getActionArg(int index) {
             return this.m_robotActionArgs.get(index);
         }
 
+        /**
+         * Get an {@link Iterable} for the {@link RobotActionArg}s
+         * @return The {@link Iterable} for the {@link RobotActionArg}s.
+         */
         public Iterable<RobotActionArg> getActionArgs() {
             return this.m_robotActionArgs;
         }
@@ -624,6 +687,11 @@ public class KochanekBartelsSpline {
             insertArgument(index+1, deletedArg);
         }
 
+        /**
+         * Get the array of argument classes used to find the {@link RobotAction} constructor with the correct
+         * signature for instantiation.
+         * @return The array of argument classes,
+         */
         public Class<?>[] getArgTypeArray() {
             ArrayList<Class<?>> argTypes = new ArrayList<>();
             for(RobotActionArg arg : m_robotActionArgs) {
@@ -632,6 +700,10 @@ public class KochanekBartelsSpline {
             return argTypes.toArray(new Class<?>[m_robotActionArgs.size()]);
         }
 
+        /**
+         * Get the array of argument value {@link Object}s required for instantiation of the {@link RobotAction}
+         * @return The array of argument value {@link Object}s
+         */
         public Object[] getArgValueArray() {
             ArrayList<Object> argValues = new ArrayList<>();
             for(RobotActionArg arg : m_robotActionArgs) {
@@ -701,28 +773,56 @@ public class KochanekBartelsSpline {
         private ScheduledAction head = null;
 
         /**
-         * Instantiate the {@link ScheduledActionList}. T
-         * @param spline
+         * Instantiate the {@link ScheduledActionList}.
+         * @param spline The spline this {@link ScheduledActionList} is associated with.
          */
-        ScheduledActionList(KochanekBartelsSpline spline) {
+        ScheduledActionList(@NotNull KochanekBartelsSpline spline) {
             this.spline = spline;
         }
 
-        ScheduledAction getHead() {
+        /**
+         * Get the first (earliest) {@link ScheduledAction} in the {@link ScheduledActionList}.
+         * @return Returns the first (earliest) {@link ScheduledAction} in the {@link ScheduledActionList}, returns
+         * {@code null} is the {@link ScheduledActionList} is empty.
+         */
+        @Nullable ScheduledAction getHead() {
             return head;
         }
 
-        RobotAction scheduleAction(double pathTime, @NotNull String command) {
+        /**
+         * Schedule an {@link RobotActionType#SCHEDULE_COMMAND} in this {@link ScheduledActionList}.
+         * @param pathTime The path time this command should be scheduled.
+         * @param command The command class name.
+         * @return  Returns the newly scheduled {@link RobotAction}.
+         */
+        @NotNull RobotAction scheduleAction(double pathTime, @NotNull String command) {
             return scheduleAction(new RobotAction(pathTime, command));
         }
 
-        RobotAction scheduleAction(double pathTime, @NotNull String command, double approxDuration) {
+        /**
+         * Schedule a {@link RobotActionType#RELINQUISH_DRIVE_TO_COMMAND} command. This command tells the path
+         * follower when it is ready to assume control, and is expected to leave the robot stopped at the next
+         * control point when it exits.
+         * @param pathTime The path time this command should be scheduled.
+         * @param command The command class name.
+         * @param approxDuration The approximate duration of the command (must be longer than the time to the
+         *                       next control point for path planning.
+         * @return Returns the newly scheduled {@link RobotAction}.
+         */
+        @NotNull RobotAction scheduleAction(double pathTime, @NotNull String command, double approxDuration) {
             return scheduleAction(new RobotAction(pathTime, command, approxDuration));
         }
 
-        RobotAction scheduleAction(RobotAction robotAction) {
-            // There is a special case for a RELINQUISH_DRIVE_TO_COMMAND where the action gets linked to the
-            // following control point, which is the field position the robot should be in when the command completes
+        /**
+         * Schedule either an {@link RobotActionType#SCHEDULE_COMMAND} or
+         * {@link RobotActionType#RELINQUISH_DRIVE_TO_COMMAND} in this {@link ScheduledActionList}.
+         * @param robotAction The {@link RobotAction} to be scheduled.
+         * @return Returns the newly scheduled {@link RobotAction}.
+         */
+        @NotNull RobotAction scheduleAction(@NotNull RobotAction robotAction) {
+            // There is a special case for a RELINQUISH_DRIVE_TO_COMMAND, where the action gets linked to the
+            // following control point. This control point is the field position the robot should be in when the
+            // command completes
             // and path following takes over.
             ControlPoint followingCtrlPt = null;
             if (RobotActionType.RELINQUISH_DRIVE_TO_COMMAND == robotAction.actionType) {
@@ -818,10 +918,20 @@ public class KochanekBartelsSpline {
      * are transformed to be robot-relative so they can be used to set the robot speeds for following this path.
      */
     public static class PathPoint {
+        /**
+         * The previous {@link ControlPoint}.
+         */
         public final ControlPoint previousControlPoint;
+        /**
+         * The next {@link ControlPoint}.
+         */
         public final ControlPoint nextControlPoint;
 
+        /**
+         * The time along the path when the robot should reach this path point.
+         */
         public final double time;
+
         /**
          * The point on the field where the robot should be when it reaches this point in the path.
          */
@@ -830,12 +940,20 @@ public class KochanekBartelsSpline {
          * The field heading for the robot when it reaches this point on the path
          */
         public final AngleConstantD fieldHeading;
+
         /**
-         *
+         * The field X velocity of the robot at this path point.
          */
         public final double field_dX;
+        /**
+         * The field Y velocity of the robot at this path point.
+         */
         public final double field_dY;
+        /**
+         * The field rotational velocity of the robot at this path point.
+         */
         public final double field_dHeading;
+
         /**
          * The forward chassis velocity of the robot in meters/sec.
          */
@@ -849,8 +967,18 @@ public class KochanekBartelsSpline {
          */
         public final double speedRotation;
 
+        /**
+         * The {@link RobotAction} that should be scheduled at this path point, {@code null} if
+         * no action should be scheduled.
+         */
         public final RobotAction action;
 
+        /**
+         * Instantiate a {@link PathPoint} for a control point that has a {@link RobotActionType#STOP_AND_RUN_COMMAND}
+         * {@link RobotAction}.
+         * @param controlPoint The {@link ControlPoint}
+         * @param robotAction The {@link RobotAction}
+         */
         public PathPoint(@NotNull ControlPoint controlPoint, @NotNull RobotAction robotAction) {
             this.time = controlPoint.m_time;
             this.fieldPt = new Point2D.Double(controlPoint.m_fieldX, controlPoint.m_fieldY);
@@ -1101,10 +1229,20 @@ public class KochanekBartelsSpline {
             return m_fieldY;
         }
 
+        /**
+         * Get the field relative X velocity (first derivative of the spline) at the control point. This is referred
+         * to as the raw tangent because it has no conditioning for display and interaction.
+         * @return The field relative X velocity
+         */
         public double getRawTangentX() {
             return m_dX;
         }
 
+        /**
+         * Get the field relative XYvelocity (first derivative of the spline) at the control point. This is referred
+         * to as the raw tangent because it has no conditioning for display and interaction.
+         * @return The field relative Y velocity
+         */
         public double getRawTangentY() {
             return m_dY;
         }
@@ -1307,7 +1445,11 @@ public class KochanekBartelsSpline {
             setTangent((fieldX - m_fieldX) / DERIVATIVE_UI_SCALE, (fieldY - m_fieldY) / DERIVATIVE_UI_SCALE);
         }
 
-        public AngleD getFieldHeading() {
+        /**
+         * Get the expected field heading when the robot is at this {@link ControlPoint}.
+         * @return The expected robot field heading at this control point.
+         */
+        @NotNull public AngleD getFieldHeading() {
             return m_fieldHeading;
         }
 
@@ -1516,15 +1658,22 @@ public class KochanekBartelsSpline {
             }
         }
 
+        /**
+         * Sets or unsets whether this {@link ControlPoint} is the end point for a
+         * {@link RobotActionType#RELINQUISH_DRIVE_TO_COMMAND}. If there is a drive action ending
+         * @param driveAction The {@link RobotActionType#RELINQUISH_DRIVE_TO_COMMAND} action that edns at this
+         *                    control point.
+         */
         public void endsDriveAction(@Nullable ScheduledActionList.ScheduledAction driveAction) {
             m_endsDriveAction = driveAction;
             if (null != driveAction) {
-                // Here we are stopped at the end of the action tha took control of the drive
+                // Here we are stopped at the end of the action that took control of the drive,
                 setTangent(0.0, 0.0);    // we are not moving
                 setRotationSpeed(0.0);
             } else {
                 // This is releasing the action that took control of the drive, so the derivatives go back the
-                // default computations of the derivatives
+                // default computations of the derivatives (note, this accounts for other conditions where the
+                // robot should be stopped it this control point.
                 resetDerivative();
             }
         }
@@ -1544,7 +1693,7 @@ public class KochanekBartelsSpline {
         }
 
         /**
-         * Get the robot action that should be performed at this control point.
+         * Get the robot {@link RobotActionType#STOP_AND_RUN_COMMAND} action that should be performed at this control point.
          *
          * @return The robot action, or {@code null} is no action, other than continuing along the path,
          * should be performed.
@@ -1963,10 +2112,18 @@ public class KochanekBartelsSpline {
         return description;
     }
 
+    /**
+     * Set the speed multiplier for this spline.
+     * @param speedMultiplier The speed multiplier.
+     */
     public void setSpeedMultiplier(double speedMultiplier) {
         this.speedMultiplier = speedMultiplier;
     }
 
+    /**
+     * Get the speed multiplier for this curve (default = 1.0).
+     * @return The speed multiplier for this curve.
+     */
     public double getSpeedMultiplier() {
         return speedMultiplier;
     }
@@ -2164,13 +2321,36 @@ public class KochanekBartelsSpline {
         }
     }
 
-    public RobotAction scheduleCommand(double pathTime, @NotNull String command) {
+    /**
+     * Schedule an {@link RobotActionType#SCHEDULE_COMMAND} in this {@link ScheduledActionList}.
+     * @param pathTime The path time this command should be scheduled.
+     * @param command The command class name.
+     * @return  Returns the newly scheduled {@link RobotAction}.
+     */
+    @NotNull public RobotAction scheduleCommand(double pathTime, @NotNull String command) {
         return scheduledActions.scheduleAction(pathTime, command);
     }
+
+    /**
+     * Schedule a {@link RobotActionType#RELINQUISH_DRIVE_TO_COMMAND} command. This command tells the path
+     * follower when it is ready to assume control, and is expected to leave the robot stopped at the next
+     * control point when it exits.
+     * @param pathTime The path time this command should be scheduled.
+     * @param command The command class name.
+     * @param approxDuration The approximate duration of the command (must be longer than the time to the
+     *                       next control point for path planning.
+     * @return Returns the newly scheduled {@link RobotAction}.
+     */
     public RobotAction scheduleCommand(double pathTime, @NotNull String command, double approxDuration) {
         return scheduledActions.scheduleAction(pathTime, command, approxDuration);
     }
 
+    /**
+     * Delete a {@link RobotAction} from the {@link ScheduledActionList} for this spline.
+     * @param robotAction The {@link RobotAction} to be deleted.
+     * @return {@code true} if the {@link RobotAction} was found and deleted from the {@link ScheduledActionList},
+     * {@code false} if the {@link RobotAction} was not on the {@link ScheduledActionList},
+     */
     public boolean deleteScheduledCommand(@NotNull RobotAction robotAction) {
         return scheduledActions.deleteAction(robotAction);
     }

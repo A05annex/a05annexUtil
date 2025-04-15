@@ -1,5 +1,8 @@
 package org.a05annex.util.geo3d;
 
+/**
+ * Constants for a zero tolerance for lengths that are considered to be zero length to prevent normalization errors.
+ */
 public class PackageConstants {
     /**
      * The maximum positive <code>double</code> value that is considered to be 0.0 for graphics.

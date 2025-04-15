@@ -1,5 +1,9 @@
 package org.a05annex.util.geo3d;
 
+/**
+ * The implicit representation of a plane in 3D as a formula that cmputes the distance from a point to the
+ * plane. Points that ate at a distance of 0.0 are on the plane.
+ */
 public class Plane3d implements Cloneable {
     /**
      * The <b>A</b> coefficient of the plane equation.

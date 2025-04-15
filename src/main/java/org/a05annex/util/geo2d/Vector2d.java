@@ -7,10 +7,18 @@ import org.jetbrains.annotations.NotNull;
  * The description of a 2 dimensional vector represented by double values.
  */
 public class Vector2d {
-    // A really small tolerance to prevent divide by zero issues
+    /**
+     * A really small length tolerance to prevent divide by zero issues when normalizing vactors.
+     */
     public static final double ZERO_TOLERANCE = 0.00001;
 
+    /**
+     * The index of the vector add operation.
+     */
     static public final int VECTOR_ADD = 0;
+    /**
+     * The index of the vector subtract operation.
+     */
     static public final int VECTOR_SUBTRACT = 1;
 
     private double m_i;

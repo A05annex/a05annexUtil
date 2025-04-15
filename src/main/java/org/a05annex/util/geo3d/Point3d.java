@@ -1,5 +1,10 @@
 package org.a05annex.util.geo3d;
 
+import org.jetbrains.annotations.NotNull;
+
+/**
+ * The representation of a 3D point of double precision.
+ */
 public class Point3d implements Cloneable {
     /**
      * The X coordinate of the point.
@@ -40,14 +45,26 @@ public class Point3d implements Cloneable {
         setValue(ptInit);
     }
 
+    /**
+     * Get the X coordinate of the point
+     * @return The X coordinate of the point.
+     */
     public double getX() {
         return x;
     }
 
+    /**
+     * Get the Y coordinate of the point
+     * @return The Y coordinate of the point.
+     */
     public double getY() {
         return y;
     }
 
+    /**
+     * Get the Z coordinate of the point
+     * @return The Z coordinate of the point.
+     */
     public double getZ() {
         return z;
     }
@@ -83,7 +100,7 @@ public class Point3d implements Cloneable {
      * Adds a vector to this point.
      *
      * @param v The vector to be added
-     * @return Returns this point after the vector is added
+     * @return Returns {@code this} point after the vector is added
      */
     public Point3d addVector(final Vector3d v) {
         x += v.i;
@@ -92,13 +109,24 @@ public class Point3d implements Cloneable {
         return this;
     }
 
-    public Point3d addPoint(final Point3d pt) {
+    /**
+     * Add a point to {@code this} point (really: treat a point as a vector from the origin and add that vector
+     * to this point).
+     * @param pt The point to be added
+     * @return {@code this} point.
+     */
+    public Point3d addPoint(@NotNull final Point3d pt) {
         x += pt.x;
         y += pt.y;
         z += pt.z;
         return this;
     }
 
+    /**
+     * Scale the components of {@code this} point
+     * @param scale The scaling factor.
+     * @return {@code this} point.
+     */
     public Point3d scale(final float scale) {
         x *= scale;
         y *= scale;

@@ -1,5 +1,8 @@
 package org.a05annex.util.geo3d;
 
+/**
+ * A class that represents a 3D vector.
+ */
 public class Vector3d  implements Cloneable {
     /**
      * The I component of the vector.

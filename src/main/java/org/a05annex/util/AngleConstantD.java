@@ -7,21 +7,64 @@ package org.a05annex.util;
  */
 public class AngleConstantD {
 
+    /**
+     * The constant for an angle of 0.0 radians (0.0 &deg;).
+     */
     public static final AngleConstantD ZERO = new AngleConstantD(AngleUnit.RADIANS, 0.0);
+    /**
+     * The constant for an angle of &pi; radians (180.0 &deg;).
+     */
     public static final AngleConstantD PI = new AngleConstantD(AngleUnit.RADIANS, Math.PI);
+    /**
+     * The constant for an angle of 2&pi; radians (360.0 &deg;).
+     */
     public static final AngleConstantD TWO_PI = new AngleConstantD(AngleUnit.RADIANS, 2.0 * Math.PI);
+    /**
+     * The constant for an angle of &pi;/2.0 radians (90.0 &deg;).
+     */
     public static final AngleConstantD PI_OVER_2 = new AngleConstantD(AngleUnit.RADIANS, Math.PI / 2.0);
+    /**
+     * The constant for an angle of -&pi; radians (-180.0 &deg;).
+     */
     public static final AngleConstantD NEG_PI = new AngleConstantD(AngleUnit.RADIANS, -Math.PI);
+    /**
+     * The constant for an angle of -2&pi; radians (-360.0 &deg;).
+     */
     public static final AngleConstantD NEG_TWO_PI = new AngleConstantD(AngleUnit.RADIANS, -2.0 * Math.PI);
+    /**
+     * The constant for an angle of -&pi;/2.0 radians (-90.0 &deg;).
+     */
     public static final AngleConstantD NEG_PI_OVER_2 = new AngleConstantD(AngleUnit.RADIANS, -Math.PI / 2.0);
 
+    /**
+     * The constant for an angle of 0.0 &deg; (0.0 radians).
+     */
     public static final AngleConstantD DEG_ZERO = ZERO;
+    /**
+     * The constant for an angle of 180.0 &deg; (&pi; radians).
+     */
     public static final AngleConstantD DEG_180 = PI;
+    /**
+     * The constant for an angle of 360.0 &deg;≈ (360.0 &deg;).
+     */
     public static final AngleConstantD DEG_360 = TWO_PI;
+    /**
+     * The constant for an angle of 90.0 &deg; (&pi;/2.0 radians).
+     */
     public static final AngleConstantD DEG_90 = PI_OVER_2;
+    /**
+     * The constant for an angle of -180.0 &deg; (-&pi; radians).
+     */
     public static final AngleConstantD DEG_NEG_180 = NEG_PI;
+    /**
+     * The constant for an angle of -360.0 &deg; (-2&pi; radians).
+     */
     public static final AngleConstantD DEG_NEG_360 = NEG_TWO_PI;
+    /**
+     * The constant for an angle of -90.0 &deg; (-&pi;/2.0 radians).
+     */
     public static final AngleConstantD DEG_NEG_90 = NEG_PI_OVER_2;
+
     /**
      * The conversion factor for radians to degrees.
      */

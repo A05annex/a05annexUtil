@@ -28,6 +28,14 @@ public class Plane2d {
         setValue(A, B, D);
     }
 
+    /**
+     * Set the value of the coefficients of {@code this} plane.
+     *
+     * @param A The A coefficient of the plane.
+     * @param B The B coefficient of the plane.
+     * @param D The D coefficient of the plane.
+     * @return Returns {@code this} plane.
+     */
     public Plane2d setValue(double A, double B, double D) {
         double len = Utl.length(A, B);
         m_A = A / len;

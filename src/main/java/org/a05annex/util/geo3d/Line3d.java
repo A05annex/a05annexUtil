@@ -1,5 +1,8 @@
 package org.a05annex.util.geo3d;
 
+/**
+ * The explicit representation of a 3d line as an origin and a direction vector.
+ */
 public class Line3d  implements Cloneable {
     //------------------------------------------------------------------------------------------------------------------
     /**
